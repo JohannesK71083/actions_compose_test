@@ -7,6 +7,6 @@ class InputError(ValueError):
 
 if __name__ == "__main__":
     if not (v := getenv("prerelease")) in ["true", "false"]:
-        raise InputError("prerelease", v)
+        raise InputError("PRERELEASE", v)
     if not (v := getenv("mode")) in ["major", "minor", "pre"]:
-        raise InputError("mode", v)
+        raise InputError("MODE", v)
