@@ -11,7 +11,7 @@ runs:
     - name: validate inputs
       shell: bash
       run: |
-        echo python "${{ github.action_path }}/src/validate_inputs.py"
+        python "${{ github.action_path }}/src/validate_inputs.py"
       env:
         prerelease: ${{ inputs.prerelease }}
         mode: ${{ inputs.mode }}
