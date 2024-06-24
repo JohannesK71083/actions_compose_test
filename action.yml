@@ -10,7 +10,7 @@ runs:
   steps:
     - shell: bash
       run: |
-        python -u "${{ github.action_path }}/src/test.py" $GITHUB_ENV
+        python -u "${{ github.action_path }}/src/test.py"
     - shell: bash
       run: |
         echo $TEST
