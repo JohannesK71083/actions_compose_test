@@ -21,6 +21,7 @@ runs:
         prerelease: ${{ inputs.prerelease }}
         mode: ${{ inputs.mode }}
     - name: Print changelog
+      shell: bash
       run: echo "${{ steps.step1.outputs.changelog }}"
     - name: Create Release
       uses: softprops/action-gh-release@v2.0.6
