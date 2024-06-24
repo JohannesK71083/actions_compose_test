@@ -13,8 +13,14 @@ runs:
       run: |
         python -u "${{ github.action_path }}/src/validate_inputs.py"
       env:
-        prerelease: ${{ inputs.prerelease }}
-        mode: ${{ inputs.mode }}
+        PRERELEASE: ${{ inputs.prerelease }}
+        MODE: ${{ inputs.mode }}
+    - name: get last release
+      shell: bash
+      run: |
+        echo "LAST_RELEASE=$(echo python -u '${{ github.action_path }}/src/get_lase_release.py')" >> $GITHUB_ENV
+        echo $LAST_RELEASE
+      env:
         GITHUB_TOKEN: ${{ github.token }}
     - name: Create Release
       uses: softprops/action-gh-release@v2.0.6
