@@ -18,10 +18,14 @@ runs:
     - name: get last release
       shell: bash
       run: |
-        echo "LAST_RELEASE=$(echo python -u '${{ github.action_path }}/src/get_lase_release.py')" >> $GITHUB_ENV
+        echo "LAST_RELEASE=$(echo python -u '${{ github.action_path }}/src/get_lase_release.py')"
         echo $LAST_RELEASE
+        echo $LAST_RELEASE >> $GITHUB_ENV
       env:
         GITHUB_TOKEN: ${{ github.token }}
+    - shell: bash
+      run: |
+        echo $LAST_RELEASE
     - name: Create Release
       uses: softprops/action-gh-release@v2.0.6
       with:
