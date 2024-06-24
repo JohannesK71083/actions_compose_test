@@ -14,13 +14,21 @@ class __StorageManager(type):
         if __name not in self.__annotations__.keys():
             raise AttributeError(f"invalid attribute {__name}")
         
-        return get_type_hints(self)[__name](environ[__name.upper()])
+        st = environ[__name.upper()]
+        st = st.replace("\\n", "\n")
+
+        return get_type_hints(self)[__name](st)
     
     def __setattr__(self, __name: str, __value: Any) -> None:
         if __name not in self.__annotations__.keys():
             raise AttributeError(f"invalid attribute {__name}")
         
-        environ[__name.upper()] = str(__value)
+        st = str(__value)
+        st = st.replace("\r", "").replace("\n", "\\n")
+
+        environ[__name.upper()] = str(st)
+        with open(environ["GITHUB_ENV"], "a") as f:
+            f.write(f"{__name}={st}")
 
 
 class Storage(metaclass=__StorageManager):
