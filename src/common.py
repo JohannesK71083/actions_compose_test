@@ -33,11 +33,10 @@ class __StorageManager(type):
 class Storage(metaclass=__StorageManager):
     GITHUB_TOKEN: str
     WORK_PATH: str
-    INPUT_MODE: str
-    INPUT_PRERELEASE: bool
     BODY_PATH: str
+    input_mode: str
+    input_prerelease: bool
     old_release_url: str
     old_release_tag: str
-    old_release_body: str
     new_release_tag: str
     new_release_title: str

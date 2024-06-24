@@ -25,7 +25,7 @@ if __name__ == "__main__":
     old_version_major = int(old_version_major)
     old_version_minor = int(old_version_minor)
 
-    match(Storage.INPUT_MODE):
+    match(Storage.input_mode):
         case "major":
             old_version_major += 1
         case "minor":
@@ -36,11 +36,11 @@ if __name__ == "__main__":
         case _:
             pass
 
-    if Storage.INPUT_PRERELEASE:
+    if Storage.input_prerelease:
         old_prerelease_number += 1
 
-    new_tag = f"V{old_version_major}.{old_version_minor}" + f"_pre-{old_prerelease_number}" if Storage.INPUT_PRERELEASE else ""
-    new_title = f"Version {old_version_major}.{old_version_minor}" + f" pre-{old_prerelease_number}" if Storage.INPUT_PRERELEASE else ""
+    new_tag = f"V{old_version_major}.{old_version_minor}" + f"_pre-{old_prerelease_number}" if Storage.input_prerelease else ""
+    new_title = f"Version {old_version_major}.{old_version_minor}" + f" pre-{old_prerelease_number}" if Storage.input_prerelease else ""
 
     Storage.new_release_tag = new_tag
     Storage.new_release_title = new_title

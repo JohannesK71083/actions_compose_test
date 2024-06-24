@@ -1,3 +1,4 @@
+from os import makedirs, path
 from common import Storage
 import requests
 
@@ -7,4 +8,6 @@ if __name__ == "__main__":
 
     Storage.old_release_url = js["html_url"]
     Storage.old_release_tag = js["tag_name"]
-    Storage.old_release_body = js["body"]
+    makedirs(path.dirname(Storage.BODY_PATH), exist_ok=True)
+    with open(Storage.BODY_PATH, "w") as f:
+        f.write(js["body"])
