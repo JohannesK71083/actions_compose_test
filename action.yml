@@ -41,7 +41,7 @@ runs:
     - name: Create Release
       uses: softprops/action-gh-release@v2.0.6
       with:
-        draft: ${{ true }}
+        draft: ${{ false }}
         prerelease: ${{ env.INPUT_PRERELEASE }}
         body_path: ${{ env.BODY_PATH }}
         name: ${{ env.NEW_RELEASE_TITLE }}
