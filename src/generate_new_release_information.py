@@ -21,6 +21,7 @@ trenner = old_tag.find(".")
 old_version_major = old_tag[:trenner]
 old_version_minor = old_tag[trenner+1:]
 
+print((old_tag, old_prerelease_number, old_version_major, old_version_minor))
 if not (old_prerelease_number.isnumeric() and old_version_major.isnumeric() and old_version_minor.isnumeric()):
     raise ValueError
 
