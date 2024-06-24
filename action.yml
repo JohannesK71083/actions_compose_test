@@ -14,7 +14,7 @@ runs:
         python -u "${{ github.action_path }}/src/validate_inputs.py"
       env:
         prerelease: ${{ inputs.prerelease }}
-        mode: "else" # ${{ inputs.mode }}
+        mode: ${{ inputs.mode }}
     - name: Create Release
       uses: softprops/action-gh-release@v2.0.6
       with:
