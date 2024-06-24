@@ -8,11 +8,14 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Set Greeting
-      run: echo "Hello $INPUT_WHO_TO_GREET."
-      shell: bash
-      env:
-        INPUT_WHO_TO_GREET: ${{ inputs.who-to-greet }}
+    - name: Create Release
+      uses: softprops/action-gh-release@v2.0.6
+      input:
+        draft: ${{ true }}
+        prerelease: ${{ prerelease }}
+      permissions:
+        contents: write
+        
 
     - name: Random Number Generator
       id: random-number-generator
