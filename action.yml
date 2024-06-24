@@ -1,13 +1,10 @@
-name: 'Hello World'
-description: 'Greet someone'
+name: 'Releaser'
+description: 'Create a release'
 inputs:
-  who-to-greet:  # id of input
-    description: 'Who to greet'
+  mode: # minor/major/pre
     required: true
-outputs:
-  random-number:
-    description: "Random number"
-    value: ${{ steps.random-number-generator.outputs.random-number }}
+  prerelease:  # true/false
+    required: true
 runs:
   using: "composite"
   steps:
