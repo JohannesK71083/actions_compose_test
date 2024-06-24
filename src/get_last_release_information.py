@@ -1,6 +1,6 @@
 from os import getenv
 import requests
-from common import get_storage
+from common import get_storage, save_storage
 
 if __name__ == "__main__":
     storage = get_storage()
@@ -12,3 +12,5 @@ if __name__ == "__main__":
     storage.old_release_url = js["html_url"]
     storage.old_release_tag = js["tag_name"]
     storage.body = js["body"]
+
+    save_storage(storage)
