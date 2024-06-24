@@ -8,32 +8,25 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - shell: bash
+    - name: setup env
+      shell: bash
       run: |
-        echo 0
-      env:
-        TEST: ${{ 123 }}
-    - shell: bash
+        echo "GITHUB_TOKEN=${{ github.token }}" >> $GITHUB_ENV
+        echo "WORK_PATH=${{ github.workspace }}" >> $GITHUB_ENV
+        echo "PRERELEASE=${{ inputs.prerelease }}" >> $GITHUB_ENV
+        echo "MODE=${{ github.mode }}" >> $GITHUB_ENV
+    - name: handle inputs
+      shell: bash
       run: |
-        echo $TEST
-    # - name: handle inputs
-    #   shell: bash
-    #   run: |
-    #     python -u "${{ github.action_path }}/src/handle_inputs.py"
-    #   env:
-    #     WORK_PATH: ${{ github.workspace }}
-    #     PRERELEASE: ${{ inputs.prerelease }}
-    #     MODE: ${{ inputs.mode }}
-    # - name: get last release informaton
-    #   shell: bash
-    #   run: |
-    #     python -u '${{ github.action_path }}/src/get_last_release_information.py'
-    #   env:
-    #     GITHUB_TOKEN: ${{ github.token }}
-    # - name: generate new release information
-    #   shell: bash
-    #   run: |
-    #     python -u '${{ github.action_path }}/src/generate_new_release_information.py'
+        python -u "${{ github.action_path }}/src/handle_inputs.py"
+    - name: get last release informaton
+      shell: bash
+      run: |
+        python -u '${{ github.action_path }}/src/get_last_release_information.py'
+    - name: generate new release information
+      shell: bash
+      run: |
+        python -u '${{ github.action_path }}/src/generate_new_release_information.py'
     # - shell: bash
     #   run: |
     #     echo $WORK_PATH
