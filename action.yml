@@ -24,11 +24,11 @@ runs:
         #echo $LAST_RELEASE >> $GITHUB_ENV
       env:
         GITHUB_TOKEN: ${{ github.token }}
-    - shell: bash
-      run: |
-        echo $LAST_RELEASE
-    - name: Create Release
-      uses: softprops/action-gh-release@v2.0.6
-      with:
-        draft: ${{ true }}
-        prerelease: ${{ inputs.prerelease }}
+    # - shell: bash
+    #   run: |
+    #     echo $LAST_RELEASE
+    # - name: Create Release
+    #   uses: softprops/action-gh-release@v2.0.6
+    #   with:
+    #     draft: ${{ true }}
+    #     prerelease: ${{ inputs.prerelease }}
