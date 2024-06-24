@@ -7,15 +7,16 @@ __work_path = environ["WORK_PATH"]
 __storage_path = path.join(__work_path, __storage_relpath)
 
 class Storage:
-    input_mode: str
-    input_prerelease: bool
-    body: str
-    old_release_url: str
-    old_release_tag: str
-    new_release_tag: str
-    new_relese_title: str
-
     def __init__(self, *, input_mode: Optional[str] = None, input_prerelease: Optional[bool] = None) -> None:
+        self.work_path = __work_path
+        self.input_mode: str
+        self.input_prerelease: bool
+        self.old_release_body: str
+        self.old_release_url: str
+        self.old_release_tag: str
+        self.new_release_tag: str
+        self.new_relese_title: str
+
         if input_mode != None:
             self.input_mode = input_mode
         if input_prerelease != None:
@@ -41,7 +42,7 @@ class Storage:
 def get_storage() -> Storage:
     with open(__storage_path, "r") as f:
         j = json.load(f)
-        print(f"load: {j}")
+        # print(f"load: {j}")
         return Storage.create_from_json(j)
 
 def save_storage(storage: Storage):
@@ -49,5 +50,5 @@ def save_storage(storage: Storage):
         makedirs(p, exist_ok=True)
     with open(__storage_path, "w") as f:
         j = storage.save_to_json()
-        print(f"save: {j}")
+        # print(f"save: {j}")
         json.dump(j, f)

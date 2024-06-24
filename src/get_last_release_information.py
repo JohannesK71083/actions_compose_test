@@ -11,6 +11,6 @@ if __name__ == "__main__":
 
     storage.old_release_url = js["html_url"]
     storage.old_release_tag = js["tag_name"]
-    storage.body = js["body"]
+    storage.old_release_body = js["body"]
 
     save_storage(storage)

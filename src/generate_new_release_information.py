@@ -32,6 +32,9 @@ if __name__ == "__main__":
             old_version_major += 1
         case "minor":
             old_version_minor += 1
+        case "pre":
+            if old_prerelease_number == 0:
+                raise ValueError("cannot create prerelease of already released version")
         case _:
             pass
 
