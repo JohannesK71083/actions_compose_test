@@ -6,7 +6,7 @@ class InputError(ValueError):
         super().__init__(f"input '{input_name}' has the invalid value '{value}'")
 
 if __name__ == "__main__":
-    if not (v := getenv("prerelease")) in ["true", "false"]:
-        raise InputError("PRERELEASE", v)
-    if not (v := getenv("mode")) in ["major", "minor", "pre"]:
-        raise InputError("MODE", v)
+    if not (v := getenv(i := "PRERELEASE")) in ["true", "false"]:
+        raise InputError(i, v)
+    if not (v := getenv(i := "MODE")) in ["major", "minor", "pre"]:
+        raise InputError(i, v)
