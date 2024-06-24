@@ -13,34 +13,23 @@ runs:
       run: |
         python -u "${{ github.action_path }}/src/handle_inputs.py"
       env:
+        WORK_PATH: ${{ github.workspace }}
         PRERELEASE: ${{ inputs.prerelease }}
         MODE: ${{ inputs.mode }}
-        WORK_PATH: ${{ github.workspace }}
     - name: get last release informaton
       shell: bash
       run: |
-        IFS='|' read -r URL TAG_NAME BODY < <(python -u '${{ github.action_path }}/src/get_last_release_information.py')
-        echo "LAST_RELEASE_URL=$URL" >> $GITHUB_ENV
-        echo "LAST_RELEASE_TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
-        echo "LAST_RELEASE_BODY=$BODY" >> $GITHUB_ENV
+        python -u '${{ github.action_path }}/src/get_last_release_information.py'
       env:
         GITHUB_TOKEN: ${{ github.token }}
+        WORK_PATH: ${{ github.workspace }}
     - name: generate new release information
       shell: bash
       run: |
-        IFS='|' read -r TAG_NAME TITLE < <(python -u '${{ github.action_path }}/src/generate_new_release_information.py')
-        echo "NEW_RELEASE_TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
-        echo "NEW_RELEASE_TITLE=$TITLE" >> $GITHUB_ENV
+        python -u '${{ github.action_path }}/src/generate_new_release_information.py'
       env:
         PRERELEASE: ${{ inputs.prerelease }}
-        MODE: ${{ inputs.mode }}
-    - shell: bash
-      run: |
-        echo $LAST_RELEASE_URL
-        echo $LAST_RELEASE_TAG_NAME
-        echo $LAST_RELEASE_BODY
-        echo $NEW_RELEASE_TAG_NAME
-        echo $NEW_RELEASE_TITLE
+        WORK_PATH: ${{ github.workspace }}
     # - name: Create Release
     #   uses: softprops/action-gh-release@v2.0.6
     #   with:
