@@ -11,7 +11,11 @@ runs:
     - name: validate inputs
       shell: bash
       run: |
-        python "${{ github.action_path }}/src/validate_inputs.py"
+          output=$(python "${{ github.action_path }}/src/validate_inputs.py")
+          output="${output//'%'/'%25'}"
+          output="${output//$'\n'/'%0A'}"
+          output="${output//$'\r'/'%0D'}" 
+          echo "::set-output name=changelog::$output"
       env:
         prerelease: ${{ inputs.prerelease }}
         mode: ${{ inputs.mode }}
