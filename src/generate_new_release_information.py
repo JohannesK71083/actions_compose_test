@@ -28,8 +28,10 @@ if __name__ == "__main__":
     match(Storage.input_mode):
         case "major":
             old_version_major += 1
+            old_prerelease_number = 0
         case "minor":
             old_version_minor += 1
+            old_prerelease_number = 0
         case "pre":
             if old_prerelease_number == 0:
                 raise ValueError("cannot create prerelease of already released version")
