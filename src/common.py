@@ -32,7 +32,7 @@ class Storage:
             setattr(self, k, v)
     
     def save_to_json(self) -> dict[str, Any]:
-        attr = [a for a in dir(self) if not (a.startswith("__") and a.endswith("__")) and not a in ["load_from_json", "save_to_json"]]
+        attr = [a for a in dir(self) if not (a.startswith("__") and a.endswith("__")) and not a in ["load_from_json", "save_to_json", "create_from_json"]]
         data: dict[str, Any] = {}
         for a in attr:
             data[a] = getattr(self, a)
@@ -46,5 +46,4 @@ def save_storage(storage: Storage):
     if not path.exists(p := path.dirname(__storage_path)):
         makedirs(p, exist_ok=True)
     with open(__storage_path, "w") as f:
-        print(storage.save_to_json())
         json.dump(storage.save_to_json(), f)
