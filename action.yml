@@ -18,7 +18,7 @@ runs:
     - name: get last release
       shell: bash
       run: |
-        echo python -u '${{ github.action_path }}/src/get_last_release.py'
+        python -u '${{ github.action_path }}/src/get_last_release.py'
         #echo "LAST_RELEASE=$(python -u '${{ github.action_path }}/src/get_last_release.py')"
         #echo $LAST_RELEASE
         #echo $LAST_RELEASE >> $GITHUB_ENV
