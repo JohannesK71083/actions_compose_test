@@ -46,3 +46,12 @@ if __name__ == "__main__":
 
     Storage.new_release_tag = new_tag
     Storage.new_release_title = new_title
+
+    if Storage.input_reuse_old_body:
+        Storage.new_release_body_path = Storage.old_release_body_path
+    elif Storage.input_body_path != "":
+        Storage.new_release_body_path = Storage.input_body_path
+    else:
+        with open(Storage.TEMP_BODY_PATH, "w") as f:
+            f.write(Storage.input_body)
+        Storage.new_release_body_path = Storage.TEMP_BODY_PATH

@@ -2,6 +2,7 @@ from __future__ import annotations
 from os import environ
 from typing import Any, get_type_hints
 
+
 class __StorageManager(type):
     def __new__(cls, name: str, bases: tuple[type, ...], dct: dict[str, str]) -> __StorageManager:
         x = super().__new__(cls, name, bases, dct)
@@ -13,16 +14,16 @@ class __StorageManager(type):
 
         if __name not in self.__annotations__.keys():
             raise AttributeError(f"invalid attribute {__name}")
-        
+
         st = environ[__name.upper()]
         st = st.replace("\\n", "\n")
 
         return get_type_hints(self)[__name](st)
-    
+
     def __setattr__(self, __name: str, __value: Any) -> None:
         if __name not in self.__annotations__.keys():
             raise AttributeError(f"invalid attribute {__name}")
-        
+
         if type(__value) == bool:
             st = "true" if __value else "false"
         else:
@@ -36,10 +37,17 @@ class __StorageManager(type):
 class Storage(metaclass=__StorageManager):
     GITHUB_TOKEN: str
     WORK_PATH: str
-    BODY_PATH: str
+    OLD_RELEASE_BODY_PATH: str
+    TEMP_BODY_PATH: str
+
     input_mode: str
     input_prerelease: bool
+    input_reuse_old_body: bool
+    input_body_path: str
+    input_body: str
+
     old_release_url: str
     old_release_tag: str
     new_release_tag: str
     new_release_title: str
+    new_release_body_path: str

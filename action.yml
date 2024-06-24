@@ -1,17 +1,24 @@
-name: 'Releaser'
-description: 'Create a release'
+name: "Releaser"
+description: "Create a release"
+
 inputs:
   # by conflicting inputs -> lowest priority wins
   mode: # minor/major/pre
+    description: "The type of release to create"
     required: true
-  prerelease:  # true/false
+  prerelease: # true/false
+    description: "Whether the release is a prerelease"
     required: true
   reuse_old_body: # true/false; priority: 0
-    default: true
+    description: "Whether to reuse the old release body"
+    default: "true"
   body_path: # str; priority: 1
-    default: ''
+    description: "The path to the file containing the release body"
+    default: ""
   body: # str; priority: 2
-    default: ''
+    description: "The release body"
+    default: ""
+
 runs:
   using: "composite"
   steps:
@@ -20,24 +27,30 @@ runs:
       run: |
         echo "GITHUB_TOKEN=${{ github.token }}" >> $GITHUB_ENV
         echo "WORK_PATH=${{ github.workspace }}" >> $GITHUB_ENV
-        echo "BODY_PATH=${{ github.workspace }}/releaser/body.txt" >> $GITHUB_ENV
-        echo "PRERELEASE=${{ inputs.prerelease }}" >> $GITHUB_ENV
-        echo "MODE=${{ inputs.mode }}" >> $GITHUB_ENV
-        echo "REUSE_OLD_BODY=${{ inputs.reuse_old_body }}" >> $GITHUB_ENV
-        echo "BODY_PATH=${{ inputs.body_path }}" >> $GITHUB_ENV
-        echo "BODY=${{ inputs.body }}" >> $GITHUB_ENV
+        echo "OLD_RELEASE_BODY_PATH=${{ github.workspace }}/releaser/old_release_body.txt" >> $GITHUB_ENV
+        echo "TEMP_BODY_PATH=${{ github.workspace }}/releaser/temp_body.txt" >> $GITHUB_ENV
+
+        echo "RAW_INPUT_PRERELEASE=${{ inputs.prerelease }}" >> $GITHUB_ENV
+        echo "RAW_INPUT_MODE=${{ inputs.mode }}" >> $GITHUB_ENV
+        echo "RAW_INPUT_REUSE_OLD_BODY=${{ inputs.reuse_old_body }}" >> $GITHUB_ENV
+        echo "RAW_INPUT_BODY_PATH=${{ inputs.body_path }}" >> $GITHUB_ENV
+        echo "RAW_INPUT_BODY=${{ inputs.body }}" >> $GITHUB_ENV
+
     - name: handle inputs
       shell: bash
       run: |
         python -u "${{ github.action_path }}/src/handle_inputs.py"
+
     - name: get last release informaton
       shell: bash
       run: |
         python -u '${{ github.action_path }}/src/get_last_release_information.py'
+
     - name: generate new release information
       shell: bash
       run: |
         python -u '${{ github.action_path }}/src/generate_new_release_information.py'
+
     # - shell: bash
     #   run: |
     #     echo $WORK_PATH
@@ -48,6 +61,7 @@ runs:
     #     echo $OLD_RELEASE_TAG
     #     echo $NEW_RELEASE_TAG
     #     echo $NEW_RELEASE_TITLE
+
     - name: Create Release
       uses: softprops/action-gh-release@v2.0.6
       with:

@@ -8,6 +8,6 @@ if __name__ == "__main__":
 
     Storage.old_release_url = js["html_url"]
     Storage.old_release_tag = js["tag_name"]
-    makedirs(path.dirname(Storage.BODY_PATH), exist_ok=True)
-    with open(Storage.BODY_PATH, "w") as f:
+    makedirs(path.dirname(Storage.OLD_RELEASE_BODY_PATH), exist_ok=True)
+    with open(Storage.OLD_RELEASE_BODY_PATH, "w") as f:
         f.write(js["body"])
