@@ -9,8 +9,8 @@ if __name__ == "__main__":
     old_tag = old_tag.removeprefix("V")
 
     old_prerelease_number = "0"
-    if (i := old_tag.find("_pre-")) != -1:
-        old_prerelease_number = old_tag[i+4:]
+    if (i := old_tag.find(st := "_pre-")) != -1:
+        old_prerelease_number = old_tag[i+len(st):]
         old_tag = old_tag[:i]
 
     trenner = old_tag.find(".")
