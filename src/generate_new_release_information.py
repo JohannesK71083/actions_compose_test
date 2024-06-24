@@ -1,5 +1,4 @@
 from os import getenv
-from sys import stderr
 
 if __name__ == "__main__":
 
