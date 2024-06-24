@@ -21,7 +21,7 @@ runs:
         IFS='|' read -r URL TAG_NAME BODY < <(python -u '${{ github.action_path }}/src/get_last_release_information.py')
         echo "LAST_RELEASE_URL=$URL" >> $GITHUB_ENV
         echo "LAST_RELEASE_TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
-        echo "LAST_RELEASE_BODY=$BODY"
+        echo "LAST_RELEASE_BODY=$BODY" >> $GITHUB_ENV
       env:
         GITHUB_TOKEN: ${{ github.token }}
     - name: generate new release information
