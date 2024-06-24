@@ -8,48 +8,42 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: handle inputs
-      shell: bash
-      run: |
-        python -u "${{ github.action_path }}/src/handle_inputs.py"
-      env:
-        WORK_PATH: ${{ github.workspace }}
-        PRERELEASE: ${{ inputs.prerelease }}
-        MODE: ${{ inputs.mode }}
-    - name: get last release informaton
-      shell: bash
-      run: |
-        python -u '${{ github.action_path }}/src/get_last_release_information.py'
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
     - shell: bash
       run: |
-        echo $WORK_PATH
-        echo $INPUT_MODE
-        echo $INPUT_PRERELEASE
-        echo $OLD_RELEASE_BODY
-        echo $OLD_RELEASE_URL
-        echo $OLD_RELEASE_TAG
-        echo $NEW_RELEASE_TAG
-        echo $NEW_RELEASE_TITLE
-        echo ---------------------
-        cat $GITHUB_ENV
-    - name: generate new release information
-      shell: bash
-      run: |
-        python -u '${{ github.action_path }}/src/generate_new_release_information.py'
+        echo 0
+      env:
+        TEST: ${{ 123 }}
     - shell: bash
       run: |
-        echo $WORK_PATH
-        echo $INPUT_MODE
-        echo $INPUT_PRERELEASE
-        echo $OLD_RELEASE_BODY
-        echo $OLD_RELEASE_URL
-        echo $OLD_RELEASE_TAG
-        echo $NEW_RELEASE_TAG
-        echo $NEW_RELEASE_TITLE
-        echo ---------------------
-        cat $GITHUB_ENV
+        echo $TEST
+    # - name: handle inputs
+    #   shell: bash
+    #   run: |
+    #     python -u "${{ github.action_path }}/src/handle_inputs.py"
+    #   env:
+    #     WORK_PATH: ${{ github.workspace }}
+    #     PRERELEASE: ${{ inputs.prerelease }}
+    #     MODE: ${{ inputs.mode }}
+    # - name: get last release informaton
+    #   shell: bash
+    #   run: |
+    #     python -u '${{ github.action_path }}/src/get_last_release_information.py'
+    #   env:
+    #     GITHUB_TOKEN: ${{ github.token }}
+    # - name: generate new release information
+    #   shell: bash
+    #   run: |
+    #     python -u '${{ github.action_path }}/src/generate_new_release_information.py'
+    # - shell: bash
+    #   run: |
+    #     echo $WORK_PATH
+    #     echo $INPUT_MODE
+    #     echo $INPUT_PRERELEASE
+    #     echo $OLD_RELEASE_BODY
+    #     echo $OLD_RELEASE_URL
+    #     echo $OLD_RELEASE_TAG
+    #     echo $NEW_RELEASE_TAG
+    #     echo $NEW_RELEASE_TITLE
     # - name: Create Release
     #   uses: softprops/action-gh-release@v2.0.6
     #   with:
