@@ -37,7 +37,7 @@ runs:
       run: |
         echo $LAST_RELEASE_URL
         echo $LAST_RELEASE_TAG_NAME
-        echo $LAST_RELEASE_TAG_BODY
+        echo $LAST_RELEASE_BODY
         echo $NEW_RELEASE_TAG_NAME
         echo $NEW_RELEASE_TITLE
     # - name: Create Release
