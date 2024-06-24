@@ -1,11 +1,14 @@
+
 from os import getenv
 from typing import Any
+from common import Storage, save_storage
 
 class InputError(ValueError):
     def __init__(self, input_name: str, value: Any) -> None:
         super().__init__(f"input '{input_name}' has the invalid value '{value}'")
 
 if __name__ == "__main__":
+    work_path = getenv("WORK_PATH", "")
     prerelease = getenv(prerelease_key := "PRERELEASE")
     mode = getenv(mode_key := "MODE")
 
@@ -16,3 +19,5 @@ if __name__ == "__main__":
     
     if mode == "pre" and prerelease != "true":
         raise ValueError("mode 'pre' requires 'prerelease' to be True.")
+
+    save_storage(Storage(input_prerelease=prerelease != "false", input_mode=mode))

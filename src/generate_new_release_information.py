@@ -1,17 +1,15 @@
-from os import getenv
+from common import get_storage, save_storage
 
 if __name__ == "__main__":
+    storage = get_storage()
 
-    old_tag = getenv("LAST_RELEASE_TAG_NAME", "")
-    mode = getenv("MODE", "")
-    prerelease = getenv("PRERELEASE", "")
+    old_tag = storage.old_release_tag
 
     if old_tag[0] != "V":
         raise ValueError(f"the LAST_RELEASE_TAG_NAME ({old_tag}) is invalid (format: V1.0_pre-1)")
 
     old_tag = old_tag.removeprefix("V")
 
-    prerelease_active = False
     old_prerelease_number = "0"
     if (i := old_tag.find("_pre-")) != -1:
         old_prerelease_number = old_tag[i+4:]
@@ -29,7 +27,7 @@ if __name__ == "__main__":
     old_version_major = int(old_version_major)
     old_version_minor = int(old_version_minor)
 
-    match(mode):
+    match(storage.input_mode):
         case "major":
             old_version_major += 1
         case "minor":
@@ -37,11 +35,13 @@ if __name__ == "__main__":
         case _:
             pass
 
-    if prerelease == "true":
+    if storage.input_prerelease:
         old_prerelease_number += 1
-        prerelease_active = True
 
-    new_tag = f"V{old_version_major}.{old_version_minor}" + f"_pre-{old_prerelease_number}" if prerelease_active else ""
-    new_title = f"Version {old_version_major}.{old_version_minor}" + f" pre-{old_prerelease_number}" if prerelease_active else ""
+    new_tag = f"V{old_version_major}.{old_version_minor}" + f"_pre-{old_prerelease_number}" if storage.input_prerelease else ""
+    new_title = f"Version {old_version_major}.{old_version_minor}" + f" pre-{old_prerelease_number}" if storage.input_prerelease else ""
 
-    print(f"{new_tag}|{new_title}")
+    storage.new_release_tag = new_tag
+    storage.new_relese_title = new_title
+
+    save_storage(storage)
