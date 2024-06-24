@@ -1,0 +1,1 @@
+print("TEST=1 >> $GITHUB_ENV")
