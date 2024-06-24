@@ -46,5 +46,7 @@ def save_storage(storage: Storage):
     if not path.exists(p := path.basename(__storage_path)):
         makedirs(p, exist_ok=True)
         print("made")
+        print(path.basename(__storage_path))
+        print(path.exists(path.basename(__storage_path)))
     with open(__storage_path, "w") as f:
         json.dump(storage.save_to_json(), f)
