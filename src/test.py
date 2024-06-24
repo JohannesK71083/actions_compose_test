@@ -1,4 +1,5 @@
+from os import getenv
 from sys import argv
 
 
-print(argv[1])
+print(getenv("GITHUB_ENV"))
