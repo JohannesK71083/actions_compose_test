@@ -14,7 +14,7 @@ runs:
         echo "GITHUB_TOKEN=${{ github.token }}" >> $GITHUB_ENV
         echo "WORK_PATH=${{ github.workspace }}" >> $GITHUB_ENV
         echo "PRERELEASE=${{ inputs.prerelease }}" >> $GITHUB_ENV
-        echo "MODE=${{ github.mode }}" >> $GITHUB_ENV
+        echo "MODE=${{ inputs.mode }}" >> $GITHUB_ENV
     - name: handle inputs
       shell: bash
       run: |
