@@ -1,1 +1,4 @@
-print("TEST=1 >> $GITHUB_ENV")
+from os import getenv
+
+
+print(getenv("GUTHUB_ENV"))
