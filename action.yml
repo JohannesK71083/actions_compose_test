@@ -15,6 +15,8 @@ runs:
         echo "WORK_PATH=${{ github.workspace }}" >> $GITHUB_ENV
         echo "PRERELEASE=${{ inputs.prerelease }}" >> $GITHUB_ENV
         echo "MODE=${{ inputs.mode }}" >> $GITHUB_ENV
+      permissions:
+        contents: write
     - name: handle inputs
       shell: bash
       run: |
