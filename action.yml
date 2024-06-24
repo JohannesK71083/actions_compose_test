@@ -12,7 +12,7 @@ runs:
       uses: softprops/action-gh-release@v2.0.6
       with:
         draft: ${{ true }}
-        prerelease: ${{ input.prerelease }}
+        prerelease: ${{ inputs.prerelease }}
         
 
     - name: Random Number Generator
