@@ -40,10 +40,12 @@ class Storage:
 
 def get_storage() -> Storage:
     with open(__storage_path, "r") as f:
+        print(f"load: {json.load(f)}")
         return Storage.create_from_json(json.load(f))
 
 def save_storage(storage: Storage):
     if not path.exists(p := path.dirname(__storage_path)):
         makedirs(p, exist_ok=True)
     with open(__storage_path, "w") as f:
+        print(f"save: {storage.save_to_json()}")
         json.dump(storage.save_to_json(), f)
