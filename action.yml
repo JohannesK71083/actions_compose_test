@@ -8,6 +8,12 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: validate inputs
+      run: |
+        python {{ github.action_path }}
+      env: |
+        prerelease: {{ inputs.prerelease }}
+        mode: {{ inputs.mode }}
     - name: Create Release
       uses: softprops/action-gh-release@v2.0.6
       with:
