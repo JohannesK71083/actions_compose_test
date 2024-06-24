@@ -18,7 +18,7 @@ runs:
     - name: get last release
       shell: bash
       run: |
-        IFS='|' read -r URL TAG_NAME <<< "$(python -u '${{ github.action_path }}/src/get_last_release.py')""
+        IFS='|' read -r URL TAG_NAME <<< "$(python -u '${{ github.action_path }}/src/get_last_release.py')"
         echo "LAST_RELEASE_URL=$URL" >> $GITHUB_ENV
         echo "LAST_RELEASE_TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
       env:
