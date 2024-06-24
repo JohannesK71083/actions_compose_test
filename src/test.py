@@ -1,4 +1,4 @@
-from os import getenv
+from sys import argv
 
 
-print(getenv("GUTHUB_ENV"))
+print(argv[1])
