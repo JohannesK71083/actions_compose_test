@@ -26,9 +26,8 @@ class __StorageManager(type):
         st = str(__value)
         st = st.replace("\r", "").replace("\n", "\\n")
 
-        environ[__name.upper()] = str(st)
         with open(environ["GITHUB_ENV"], "a") as f:
-            f.write(f"{__name}={st}")
+            f.write(f"{__name.upper()}={st}")
 
 
 class Storage(metaclass=__StorageManager):
