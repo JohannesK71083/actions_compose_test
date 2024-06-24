@@ -13,7 +13,7 @@ old_tag = old_tag.removeprefix("V")
 
 prerelease_active = False
 old_prerelease_number = "0"
-if (i := old_tag.find("-pre")):
+if (i := old_tag.find("-pre")) != -1:
     old_prerelease_number = old_tag[i+4:]
     old_tag = old_tag[:i]
 
