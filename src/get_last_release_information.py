@@ -1,11 +1,8 @@
 from common import Storage
-from os import getenv
 import requests
 
 if __name__ == "__main__":
-    token = getenv("GITHUB_TOKEN")
-
-    r = requests.get('https://api.github.com/repos/JohannesK71083/actions_test/releases', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {token}"})
+    r = requests.get('https://api.github.com/repos/JohannesK71083/actions_test/releases', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {Storage.GITHUB_TOKEN}"})
     js = r.json()[0]
 
     Storage.old_release_url = js["html_url"]

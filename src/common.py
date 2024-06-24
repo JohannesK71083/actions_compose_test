@@ -31,9 +31,11 @@ class __StorageManager(type):
 
 
 class Storage(metaclass=__StorageManager):
-    work_path: str
-    input_mode: str
-    input_prerelease: bool
+    GITHUB_TOKEN: str
+    WORK_PATH: str
+    INPUT_MODE: str
+    INPUT_PRERELEASE: bool
+    BODY_PATH: str
     old_release_url: str
     old_release_tag: str
     old_release_body: str
