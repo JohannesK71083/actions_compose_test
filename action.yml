@@ -15,7 +15,7 @@ runs:
       env:
         PRERELEASE: ${{ inputs.prerelease }}
         MODE: ${{ inputs.mode }}
-    - name: get last release
+    - name: get last release informaton
       shell: bash
       run: |
         IFS='|' read -r URL TAG_NAME <<< "$(python -u '${{ github.action_path }}/src/get_last_release.py')"
@@ -23,6 +23,10 @@ runs:
         echo "LAST_RELEASE_TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
       env:
         GITHUB_TOKEN: ${{ github.token }}
+    - name: generate new release information
+      shell: bash
+      run: |
+        ''
     - shell: bash
       run: |
         echo $LAST_RELEASE_URL
