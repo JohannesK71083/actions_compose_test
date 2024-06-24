@@ -23,7 +23,6 @@ if __name__ == "__main__":
     old_version_major = old_tag[:trenner]
     old_version_minor = old_tag[trenner+1:]
 
-    print((old_tag, old_prerelease_number, old_version_major, old_version_minor), file=stderr)
     if not (old_prerelease_number.isnumeric() and old_version_major.isnumeric() and old_version_minor.isnumeric()):
         raise ValueError(f"at least one value could not be parsed:\nold_prerelease_number={old_prerelease_number}\nold_version_major={old_version_major}\nold_version_minor={old_version_minor}")
 
