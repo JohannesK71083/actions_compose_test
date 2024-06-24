@@ -22,6 +22,18 @@ runs:
         python -u '${{ github.action_path }}/src/get_last_release_information.py'
       env:
         GITHUB_TOKEN: ${{ github.token }}
+    - shell: bash
+      run: |
+        echo $WORK_PATH
+        echo $INPUT_MODE
+        echo $INPUT_PRERELEASE
+        echo $OLD_RELEASE_BODY
+        echo $OLD_RELEASE_URL
+        echo $OLD_RELEASE_TAG
+        echo $NEW_RELEASE_TAG
+        echo $NEW_RELEASE_TITLE
+        echo ---------------------
+        cat $GITHUB_ENV
     - name: generate new release information
       shell: bash
       run: |
