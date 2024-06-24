@@ -26,6 +26,18 @@ runs:
       shell: bash
       run: |
         python -u '${{ github.action_path }}/src/generate_new_release_information.py'
+    - shell: bash
+      run: |
+        echo $WORK_PATH
+        echo $INPUT_MODE
+        echo $INPUT_PRERELEASE
+        echo $OLD_RELEASE_BODY
+        echo $OLD_RELEASE_URL
+        echo $OLD_RELEASE_TAG
+        echo $NEW_RELEASE_TAG
+        echo $NEW_RELEASE_TITLE
+        echo ---------------------
+        cat $GITHUB_ENV
     # - name: Create Release
     #   uses: softprops/action-gh-release@v2.0.6
     #   with:
