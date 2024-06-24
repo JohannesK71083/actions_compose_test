@@ -26,11 +26,18 @@ runs:
     - name: generate new release information
       shell: bash
       run: |
-        ''
+        IFS='|' read -r TAG_NAME TITLE <<< "$(python -u '${{ github.action_path }}/src/generate_new_release_information.py')"
+        echo "NEW_RELEASE_TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+        echo "NEW_RELEASE_TITLE=$TITLE" >> $GITHUB_ENV
+      env:
+        PRERELEASE: ${{ inputs.prerelease }}
+        MODE: ${{ inputs.mode }}
     - shell: bash
       run: |
         echo $LAST_RELEASE_URL
         echo $LAST_RELEASE_TAG_NAME
+        echo $NEW_RELEASE_TAG_NAME
+        echo $NEW_RELEASE_TITLE
     # - name: Create Release
     #   uses: softprops/action-gh-release@v2.0.6
     #   with:
