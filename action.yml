@@ -10,7 +10,7 @@ runs:
   steps:
     - name: Create Release
       uses: softprops/action-gh-release@v2.0.6
-      input:
+      with:
         draft: ${{ true }}
         prerelease: ${{ prerelease }}
       permissions:
