@@ -67,7 +67,7 @@ runs:
       with:
         draft: ${{ true }}
         prerelease: ${{ env.INPUT_PRERELEASE }}
-        body_path: ${{ env.BODY_PATH }}
+        body_path: ${{ env.NEW_RELEASE_BODY_PATH }}
         name: ${{ env.NEW_RELEASE_TITLE }}
         tag_name: ${{ env.NEW_RELEASE_TAG }}
         make_latest: ${{ true }}
