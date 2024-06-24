@@ -18,9 +18,10 @@ runs:
     - name: get last release informaton
       shell: bash
       run: |
-        IFS='|' read -r URL TAG_NAME < <(python -u '${{ github.action_path }}/src/get_last_release_information.py')
+        IFS='|' read -r URL TAG_NAME BODY < <(python -u '${{ github.action_path }}/src/get_last_release_information.py')
         echo "LAST_RELEASE_URL=$URL" >> $GITHUB_ENV
         echo "LAST_RELEASE_TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+        echo "LAST_RELEASE_BODY=$BODY"
       env:
         GITHUB_TOKEN: ${{ github.token }}
     - name: generate new release information
@@ -36,6 +37,7 @@ runs:
       run: |
         echo $LAST_RELEASE_URL
         echo $LAST_RELEASE_TAG_NAME
+        echo $LAST_RELEASE_TAG_BODY
         echo $NEW_RELEASE_TAG_NAME
         echo $NEW_RELEASE_TITLE
     # - name: Create Release
