@@ -1,9 +1,7 @@
-from common import get_storage, save_storage
+from common import Storage
 
 if __name__ == "__main__":
-    storage = get_storage()
-
-    old_tag = storage.old_release_tag
+    old_tag = Storage.old_release_tag
 
     if old_tag[0] != "V":
         raise ValueError(f"the LAST_RELEASE_TAG_NAME ({old_tag}) is invalid (format: V1.0_pre-1)")
@@ -27,7 +25,7 @@ if __name__ == "__main__":
     old_version_major = int(old_version_major)
     old_version_minor = int(old_version_minor)
 
-    match(storage.input_mode):
+    match(Storage.input_mode):
         case "major":
             old_version_major += 1
         case "minor":
@@ -38,13 +36,11 @@ if __name__ == "__main__":
         case _:
             pass
 
-    if storage.input_prerelease:
+    if Storage.input_prerelease:
         old_prerelease_number += 1
 
-    new_tag = f"V{old_version_major}.{old_version_minor}" + f"_pre-{old_prerelease_number}" if storage.input_prerelease else ""
-    new_title = f"Version {old_version_major}.{old_version_minor}" + f" pre-{old_prerelease_number}" if storage.input_prerelease else ""
+    new_tag = f"V{old_version_major}.{old_version_minor}" + f"_pre-{old_prerelease_number}" if Storage.input_prerelease else ""
+    new_title = f"Version {old_version_major}.{old_version_minor}" + f" pre-{old_prerelease_number}" if Storage.input_prerelease else ""
 
-    storage.new_release_tag = new_tag
-    storage.new_relese_title = new_title
-
-    save_storage(storage)
+    Storage.new_release_tag = new_tag
+    Storage.new_release_title = new_title

@@ -1,54 +1,34 @@
-from os import environ, makedirs, path
-from typing import Any, Optional
-import json
+from __future__ import annotations
+from os import environ
+from typing import Any, get_type_hints
 
-__storage_relpath = "./releaser/storage.json"
-__work_path = environ["WORK_PATH"]
-__storage_path = path.join(__work_path, __storage_relpath)
+class __StorageManager(type):
+    def __new__(cls, name: str, bases: tuple[type, ...], dct: dict[str, str]) -> __StorageManager:
+        x = super().__new__(cls, name, bases, dct)
+        return x
 
-class Storage:
-    def __init__(self, *, input_mode: Optional[str] = None, input_prerelease: Optional[bool] = None) -> None:
-        self.work_path = __work_path
-        self.input_mode: str
-        self.input_prerelease: bool
-        self.old_release_body: str
-        self.old_release_url: str
-        self.old_release_tag: str
-        self.new_release_tag: str
-        self.new_relese_title: str
+    def __getattribute__(self, __name: str) -> Any:
+        if __name.startswith("__") and __name.endswith("__"):
+            return super().__getattribute__(__name)
 
-        if input_mode != None:
-            self.input_mode = input_mode
-        if input_prerelease != None:
-            self.input_prerelease = input_prerelease
-
-    @classmethod
-    def create_from_json(cls, data: dict[str, Any]):
-        ins = cls()
-        ins.load_from_json(data)
-        return ins
-
-    def load_from_json(self, data: dict[str, Any]):
-        for k, v in data.items():
-            setattr(self, k, v)
+        if __name not in self.__annotations__.keys():
+            raise AttributeError(f"invalid attribute {__name}")
+        
+        return get_type_hints(self)[__name](environ[__name.upper()])
     
-    def save_to_json(self) -> dict[str, Any]:
-        attr = [a for a in dir(self) if not (a.startswith("__") and a.endswith("__")) and not a in ["load_from_json", "save_to_json", "create_from_json"]]
-        data: dict[str, Any] = {}
-        for a in attr:
-            data[a] = getattr(self, a)
-        return data
+    def __setattr__(self, __name: str, __value: Any) -> None:
+        if __name not in self.__annotations__.keys():
+            raise AttributeError(f"invalid attribute {__name}")
+        
+        environ[__name.upper()] = str(__value)
 
-def get_storage() -> Storage:
-    with open(__storage_path, "r") as f:
-        j = json.load(f)
-        # print(f"load: {j}")
-        return Storage.create_from_json(j)
 
-def save_storage(storage: Storage):
-    if not path.exists(p := path.dirname(__storage_path)):
-        makedirs(p, exist_ok=True)
-    with open(__storage_path, "w") as f:
-        j = storage.save_to_json()
-        # print(f"save: {j}")
-        json.dump(j, f)
+class Storage(metaclass=__StorageManager):
+    work_path: str
+    input_mode: str
+    input_prerelease: bool
+    old_release_url: str
+    old_release_tag: str
+    old_release_body: str
+    new_release_tag: str
+    new_release_title: str

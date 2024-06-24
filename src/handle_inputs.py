@@ -1,7 +1,7 @@
 
 from os import getenv
 from typing import Any
-from common import Storage, save_storage
+from common import Storage
 
 class InputError(ValueError):
     def __init__(self, input_name: str, value: Any) -> None:
@@ -20,4 +20,6 @@ if __name__ == "__main__":
     if mode == "pre" and prerelease != "true":
         raise ValueError("mode 'pre' requires 'prerelease' to be True.")
 
-    save_storage(Storage(input_prerelease=prerelease != "false", input_mode=mode))
+    Storage.work_path = work_path
+    Storage.input_prerelease = prerelease != "false"
+    Storage.input_mode = mode
