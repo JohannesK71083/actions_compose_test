@@ -1,10 +1,17 @@
 name: 'Releaser'
 description: 'Create a release'
 inputs:
+  # by conflicting inputs -> lowest priority wins
   mode: # minor/major/pre
     required: true
   prerelease:  # true/false
     required: true
+  reuse_old_body: # true/false; priority: 0
+    default: true
+  body_path: # str; priority: 1
+    default: ''
+  body: # str; priority: 2
+    default: ''
 runs:
   using: "composite"
   steps:
@@ -16,6 +23,9 @@ runs:
         echo "BODY_PATH=${{ github.workspace }}/releaser/body.txt" >> $GITHUB_ENV
         echo "PRERELEASE=${{ inputs.prerelease }}" >> $GITHUB_ENV
         echo "MODE=${{ inputs.mode }}" >> $GITHUB_ENV
+        echo "REUSE_OLD_BODY=${{ inputs.reuse_old_body }}" >> $GITHUB_ENV
+        echo "BODY_PATH=${{ inputs.body_path }}" >> $GITHUB_ENV
+        echo "BODY=${{ inputs.body }}" >> $GITHUB_ENV
     - name: handle inputs
       shell: bash
       run: |
