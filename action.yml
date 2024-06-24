@@ -7,14 +7,14 @@ inputs:
     required: true
 runs:
   using: "composite"
+  permissions:
+    contents: write
   steps:
     - name: Create Release
       uses: softprops/action-gh-release@v2.0.6
       with:
         draft: ${{ true }}
-        prerelease: ${{ prerelease }}
-      permissions:
-        contents: write
+        prerelease: ${{ input.prerelease }}
         
 
     - name: Random Number Generator
