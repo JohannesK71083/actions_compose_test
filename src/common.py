@@ -23,7 +23,10 @@ class __StorageManager(type):
         if __name not in self.__annotations__.keys():
             raise AttributeError(f"invalid attribute {__name}")
         
-        st = str(__value)
+        if type(__value) == bool:
+            st = "true" if __value else "false"
+        else:
+            st = str(__value)
         st = st.replace("\r", "").replace("\n", "\\n")
 
         with open(environ["GITHUB_ENV"], "a") as f:
