@@ -38,8 +38,12 @@ runs:
     #     echo $OLD_RELEASE_TAG
     #     echo $NEW_RELEASE_TAG
     #     echo $NEW_RELEASE_TITLE
-    # - name: Create Release
-    #   uses: softprops/action-gh-release@v2.0.6
-    #   with:
-    #     draft: ${{ true }}
-    #     prerelease: ${{ inputs.prerelease }}
+    - name: Create Release
+      uses: softprops/action-gh-release@v2.0.6
+      with:
+        draft: ${{ true }}
+        prerelease: ${{ env.INPUT_PRERELEASE }}
+        body_path: ${{ env.BODY_PATH }}
+        name: ${{ env.NEW_RELEASE_TITLE }}
+        tag_name: ${{ env.NEW_RELEASE_TAG }}
+        make_latest: ${{ true }}
