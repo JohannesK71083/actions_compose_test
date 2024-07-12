@@ -7,6 +7,8 @@ import requests
 
 from GithubENVManager import GithubENVManager
 
+#TODO: escape []; what if old tag does not exist; implement tag-format in generate_new_release_information; check by pre if previous is pre
+
 TEMP_BODY_PATH: str = "./temp_body.txt"
 
 
