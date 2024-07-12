@@ -255,16 +255,16 @@ def generate_new_release_information(old_tag: str, mode: MODE, prerelease: bool,
     new_tag = f"V{old_version_major}.{old_version_minor}" + f"_pre-{old_prerelease_number}" if prerelease else ""
     new_title = f"Version {old_version_major}.{old_version_minor}" + f" pre-{old_prerelease_number}" if prerelease else ""
 
-    GithubENVManager.s_release_tag = new_tag
-    GithubENVManager.s_release_title = new_title
+    ENVStorage.s_release_tag = new_tag
+    ENVStorage.s_release_title = new_title
 
     match body_mode:
         case BODY_MODE.BODY_FROM_FILE:
-            GithubENVManager.s_release_body_path = body_path
+            ENVStorage.s_release_body_path = body_path
         case BODY_MODE.BODY_FROM_INPUT:
             with open(TEMP_BODY_PATH, "w") as f:
                 f.write(body)
-            GithubENVManager.s_release_body_path = TEMP_BODY_PATH
+            ENVStorage.s_release_body_path = TEMP_BODY_PATH
         case _:
             raise ValueError
 
