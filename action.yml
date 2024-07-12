@@ -55,3 +55,7 @@ runs:
         name: ${{ env.s_release_title }}
         tag_name: ${{ env.s_release_tag }}
         make_latest: ${{ true }}
+      env:
+        s_release_tag: ${{ env.s_release_tag }}
+        s_release_title: ${{ env.s_release_title }}
+        s_release_body_path: ${{ env.s_release_body_path }}
