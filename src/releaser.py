@@ -166,7 +166,11 @@ def parse_tag_format(tag_format: str) -> tuple[tuple[TAG_COMPONENTS, str], ...]:
 
 def get_last_release_information(repository_name: str, github_token: str) -> ReleaseInformation:
     r = requests.get(f'https://api.github.com/repos/{repository_name}/releases', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
-    js = r.json()[0]
+    try:
+        js = r.json()[0]
+    except IndexError:
+        print("No releases found!", file=stderr)
+        js = {"tag_name": "", "body": ""}	
 
     return ReleaseInformation(tag=js["tag_name"], body=js["body"])
 
