@@ -252,8 +252,8 @@ def generate_new_release_information(old_tag: str, mode: MODE, prerelease: bool,
     if prerelease:
         old_prerelease_number += 1
 
-    new_tag = f"V{old_version_major}.{old_version_minor}" + f"_pre-{old_prerelease_number}" if GithubENVManager.input_prerelease else ""
-    new_title = f"Version {old_version_major}.{old_version_minor}" + f" pre-{old_prerelease_number}" if GithubENVManager.input_prerelease else ""
+    new_tag = f"V{old_version_major}.{old_version_minor}" + f"_pre-{old_prerelease_number}" if prerelease else ""
+    new_title = f"Version {old_version_major}.{old_version_minor}" + f" pre-{old_prerelease_number}" if prerelease else ""
 
     GithubENVManager.s_release_tag = new_tag
     GithubENVManager.s_release_title = new_title
