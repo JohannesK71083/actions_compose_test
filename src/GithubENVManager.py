@@ -3,8 +3,8 @@ from os import environ
 from typing import Any, get_type_hints
 
 
-class __StorageManager(type):
-    def __new__(cls, name: str, bases: tuple[type, ...], dct: dict[str, str]) -> __StorageManager:
+class __GithubENVManagerMeta(type):
+    def __new__(cls, name: str, bases: tuple[type, ...], dct: dict[str, str]) -> __GithubENVManagerMeta:
         x = super().__new__(cls, name, bases, dct)
         return x
 
@@ -34,20 +34,5 @@ class __StorageManager(type):
             f.write(f"{__name.upper()}={st}\n")
 
 
-class Storage(metaclass=__StorageManager):
-    GITHUB_TOKEN: str
-    WORK_PATH: str
-    OLD_RELEASE_BODY_PATH: str
-    TEMP_BODY_PATH: str
-
-    input_mode: str
-    input_prerelease: bool
-    input_reuse_old_body: bool
-    input_body_path: str
-    input_body: str
-
-    old_release_url: str
-    old_release_tag: str
-    new_release_tag: str
-    new_release_title: str
-    new_release_body_path: str
+class GithubENVManager(metaclass=__GithubENVManagerMeta):
+    pass

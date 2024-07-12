@@ -9,6 +9,9 @@ inputs:
   prerelease: # true/false
     description: "Whether the release is a prerelease"
     required: true
+  tag_format: # must include {Maj}, {Min}, {Pre}; the text enclosed by [] and including the {Pre} will only be used if it is a prerelease (optional). 
+    description: "The format of the tag"
+    default: "V{Maj}.{Min}[_pre-{Pre}]"
   reuse_old_body: # true/false; priority: 0
     description: "Whether to reuse the old release body"
     default: "true"
@@ -22,52 +25,33 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: setup env
+    - name: execute python script
       shell: bash
       run: |
-        echo "GITHUB_TOKEN=${{ github.token }}" >> $GITHUB_ENV
-        echo "WORK_PATH=${{ github.workspace }}" >> $GITHUB_ENV
-        echo "OLD_RELEASE_BODY_PATH=${{ github.workspace }}/releaser/old_release_body.txt" >> $GITHUB_ENV
-        echo "TEMP_BODY_PATH=${{ github.workspace }}/releaser/temp_body.txt" >> $GITHUB_ENV
-
-        echo "RAW_INPUT_PRERELEASE=${{ inputs.prerelease }}" >> $GITHUB_ENV
-        echo "RAW_INPUT_MODE=${{ inputs.mode }}" >> $GITHUB_ENV
-        echo "RAW_INPUT_REUSE_OLD_BODY=${{ inputs.reuse_old_body }}" >> $GITHUB_ENV
-        echo "RAW_INPUT_BODY_PATH=${{ inputs.body_path }}" >> $GITHUB_ENV
-        echo "RAW_INPUT_BODY=${{ inputs.body }}" >> $GITHUB_ENV
-
-    - name: handle inputs
-      shell: bash
-      run: |
-        python -u "${{ github.action_path }}/src/handle_inputs.py"
-
-    - name: get last release informaton
-      shell: bash
-      run: |
-        python -u '${{ github.action_path }}/src/get_last_release_information.py'
-
-    - name: generate new release information
-      shell: bash
-      run: |
-        python -u '${{ github.action_path }}/src/generate_new_release_information.py'
+        python -u "${{ github.action_path }}/src/releaser.py"
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        WORK_PATH: ${{ github.workspace }}
+        REPOSITORY: ${{ github.repository }}
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_PRERELEASE: ${{ inputs.prerelease }}
+        INPUT_TAG_FORMAT: ${{ inputs.tag_format }}
+        INPUT_REUSE_OLD_BODY: ${{ inputs.reuse_old_body }}
+        INPUT_BODY_PATH: ${{ inputs.body_path }}
+        INPUT_BODY: ${{ inputs.body }}
 
     # - shell: bash
     #   run: |
-    #     echo $WORK_PATH
-    #     echo $INPUT_MODE
-    #     echo $INPUT_PRERELEASE
-    #     echo $OLD_RELEASE_BODY
-    #     echo $OLD_RELEASE_URL
-    #     echo $OLD_RELEASE_TAG
-    #     echo $NEW_RELEASE_TAG
-    #     echo $NEW_RELEASE_TITLE
+    #     echo $s_release_tag
+    #     echo $s_release_title
+    #     echo $s_release_body_path
 
     - name: Create Release
       uses: softprops/action-gh-release@v2.0.6
       with:
         draft: ${{ true }}
-        prerelease: ${{ env.INPUT_PRERELEASE }}
-        body_path: ${{ env.NEW_RELEASE_BODY_PATH }}
-        name: ${{ env.NEW_RELEASE_TITLE }}
-        tag_name: ${{ env.NEW_RELEASE_TAG }}
+        prerelease: ${{ inputs.prerelease }}
+        body_path: ${{ env.s_release_body_path }}
+        name: ${{ env.s_release_title }}
+        tag_name: ${{ env.s_release_tag }}
         make_latest: ${{ true }}
