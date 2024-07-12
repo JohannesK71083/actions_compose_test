@@ -1,13 +1,15 @@
 from enum import Enum, auto
 from os import path
 import re
-from typing import Annotated, Any, NamedTuple, Optional, TypedDict
+from sys import stderr
+from traceback import format_exc
+from typing import Any, NamedTuple, Optional, TypedDict
 
 import requests
 
 from GithubENVManager import GithubENVManager
 
-#TODO: escape []; what if old tag does not exist; implement tag-format in generate_new_release_information; check by pre if previous is pre; error handling; option: ignore drafts
+#TODO: escape []; implement title-format option: ignore drafts
 
 TEMP_BODY_PATH: str = "./temp_body.txt"
 
@@ -227,7 +229,7 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
             new_version[1] += 1
             new_version[2] = 0
         case MODE.PRE:
-            if new_version[2] == 0:
+            if new_version[2] == -1:
                 raise ValueError("cannot create prerelease of already released version")
 
     if prerelease:
@@ -271,7 +273,12 @@ if __name__ == "__main__":
     inputs = validate_inputs()
     tag_components = parse_tag_format(inputs["tag_format"])
     last_release_information = get_last_release_information(inputs["repository"], inputs["github_token"])
-    version = get_old_version(tag_components, last_release_information["tag"])
+    try:
+        version = get_old_version(tag_components, last_release_information["tag"])
+    except Exception:
+        exc = format_exc()
+        print(f"Error while parsing old version! Using Version(1, 0, 0) instead.\nError:\n{exc}", file=stderr)
+        version = Version(1, 0, 0)
     if inputs["body_mode"] == BODY_MODE.REUSE_OLD_BODY:
         body = last_release_information["body"]
         body_mode = BODY_MODE.BODY_FROM_INPUT
