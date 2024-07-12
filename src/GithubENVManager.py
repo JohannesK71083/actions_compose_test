@@ -15,7 +15,7 @@ class __GithubENVManagerMeta(type):
         if __name not in self.__annotations__.keys():
             raise AttributeError(f"invalid attribute {__name}")
 
-        st = environ[__name.upper()]
+        st = environ[__name]
         st = st.replace("\\n", "\n")
 
         return get_type_hints(self)[__name](st)
@@ -31,7 +31,7 @@ class __GithubENVManagerMeta(type):
         st = st.replace("\r", "").replace("\n", "\\n")
 
         with open(environ["GITHUB_ENV"], "a") as f:
-            f.write(f"{__name.upper()}={st}\n")
+            f.write(f"{__name}={st}\n")
 
 
 class GithubENVManager(metaclass=__GithubENVManagerMeta):
