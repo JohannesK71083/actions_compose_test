@@ -1,13 +1,13 @@
 from enum import Enum, auto
 from os import path
 import re
-from typing import Any, NamedTuple, Optional, TypedDict
+from typing import Annotated, Any, NamedTuple, Optional, TypedDict
 
 import requests
 
 from GithubENVManager import GithubENVManager
 
-#TODO: escape []; what if old tag does not exist; implement tag-format in generate_new_release_information; check by pre if previous is pre; error handling
+#TODO: escape []; what if old tag does not exist; implement tag-format in generate_new_release_information; check by pre if previous is pre; error handling; option: ignore drafts
 
 TEMP_BODY_PATH: str = "./temp_body.txt"
 
@@ -217,45 +217,41 @@ def get_old_version(tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], old_
     return Version(major_version, minor_version, prerelease_version)
 
 
-def generate_new_release_information(old_tag: str, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str):
-    if old_tag[0] != "V":
-        raise ValueError(f"the LAST_RELEASE_TAG_NAME ({old_tag}) is invalid (format: V1.0_pre-1)")
-
-    old_tag = old_tag.removeprefix("V")
-
-    old_prerelease_number = "0"
-    if (i := old_tag.find(st := "_pre-")) != -1:
-        old_prerelease_number = old_tag[i+len(st):]
-        old_tag = old_tag[:i]
-
-    trenner = old_tag.find(".")
-
-    old_version_major = old_tag[:trenner]
-    old_version_minor = old_tag[trenner+1:]
-
-    if not (old_prerelease_number.isnumeric() and old_version_major.isnumeric() and old_version_minor.isnumeric()):
-        raise ValueError(f"at least one value could not be parsed:\nold_prerelease_number={old_prerelease_number}\nold_version_major={old_version_major}\nold_version_minor={old_version_minor}")
-
-    old_prerelease_number = int(old_prerelease_number)
-    old_version_major = int(old_version_major)
-    old_version_minor = int(old_version_minor)
-
+def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str):
+    new_version = list(version)
     match(mode):
         case MODE.MAJOR:
-            old_version_major += 1
-            old_prerelease_number = 0
+            new_version[0] += 1
+            new_version[2] = 0
         case MODE.MINOR:
-            old_version_minor += 1
-            old_prerelease_number = 0
+            new_version[1] += 1
+            new_version[2] = 0
         case MODE.PRE:
-            if old_prerelease_number == 0:
+            if new_version[2] == 0:
                 raise ValueError("cannot create prerelease of already released version")
 
     if prerelease:
-        old_prerelease_number += 1
+        new_version[2] += 1
 
-    new_tag = f"V{old_version_major}.{old_version_minor}" + f"_pre-{old_prerelease_number}" if prerelease else ""
-    new_title = f"Version {old_version_major}.{old_version_minor}" + f" pre-{old_prerelease_number}" if prerelease else ""
+    new_tag = ""
+    for k, v in tag_components:
+        if k == TAG_COMPONENTS.FILLER:
+            new_tag += v
+        elif k == TAG_COMPONENTS.PRE_TEXT_PRE:
+            if prerelease:
+                new_tag += v
+        elif k == TAG_COMPONENTS.PRE_TEXT_SUF:
+            if prerelease:
+                new_tag += v
+        elif k == TAG_COMPONENTS.MAJ:
+            new_tag += str(new_version[0])
+        elif k == TAG_COMPONENTS.MIN:
+            new_tag += str(new_version[1])
+        elif k == TAG_COMPONENTS.PRE:
+            if prerelease:
+                new_tag += str(new_version[2])
+
+    new_title = f"Version {new_version[0]}.{new_version[1]}" + f" pre-{new_version[2]}" if prerelease else ""
 
     ENVStorage.s_release_tag = new_tag
     ENVStorage.s_release_title = new_title
@@ -282,4 +278,4 @@ if __name__ == "__main__":
     else:
         body = inputs["body"]
         body_mode = inputs["body_mode"]
-    generate_new_release_information(last_release_information["tag"], inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body)
+    generate_new_release_information(version, tag_components, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body)
