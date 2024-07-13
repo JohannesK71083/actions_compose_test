@@ -187,7 +187,7 @@ def parse_title_format(title_format: str) -> TitleFormat:
     for m in re.finditer(regex, title_format):
         pos = m.start(0), m.end(0)
         if title_format.find("{Pre}", pos[0], pos[1]) != -1 and title_format.find("{Maj}", pos[0], pos[1]) == -1 and title_format.find("{Min}", pos[0], pos[1]) == -1:
-            return TitleFormat(title_format, title_format[:pos[0]] + title_format[pos[1]:])
+            return TitleFormat(title_format[:pos[0]] + title_format[pos[0]+1:pos[1]-1] + title_format[pos[1]:], title_format[:pos[0]] + title_format[pos[1]:])
     else:
         return TitleFormat(title_format, title_format)
 
