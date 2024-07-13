@@ -199,7 +199,7 @@ def get_last_release_information(repository_name: str, github_token: str, ignore
         if not (js["draft"] and ignore_drafts):
             break
     else:
-        print("::warning NO_RELEASES_ERROR::No releases found!", file=stderr)
+        print("::warning ::No releases found!", file=stderr)
         js = {"tag_name": "", "body": ""}
 
     return ReleaseInformation(tag=js["tag_name"], body=js["body"])
@@ -327,7 +327,7 @@ def main() -> None:
         version = get_old_version(tag_components, last_release_information["tag"])
     except Exception:
         exc = format_exc()
-        print(f"::error VERSION_PARSING_ERROR::Error while parsing old version! Using Version(1, 0, 0) instead.\nError:\n{exc}", file=stderr)
+        print(f"::error ::Error while parsing old version! Using Version(1, 0, 0) instead.\nError:\n{exc}", file=stderr)
         version = Version(1, 0, 0)
 
     if inputs["body_mode"] == BODY_MODE.REUSE_OLD_BODY:
@@ -349,5 +349,5 @@ if __name__ == "__main__":
         exc_type, exc_obj, exc_tb = exc_info()
         ln = exc_tb.tb_lineno if exc_tb is not None else -1
         fname = path.split(exc_tb.tb_frame.f_code.co_filename)[1] if exc_tb is not None else ""
-        print(f"::error file={fname},line={ln}::{type(e).__name__}: {str(e)}\n{exc}", file=stderr)
+        print(f"::error ::{type(e).__name__}: {str(e)}\n{exc}", file=stderr)
         raise e
