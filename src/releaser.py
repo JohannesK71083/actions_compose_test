@@ -346,5 +346,5 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         exc = format_exc()
-        print(f"::error UNEXPECTED_ERROR: {type(e).__name__}::An unexpected error occurred!\nError:\n{exc}", file=stderr)
+        print(f"::error title='UNEXPECTED_ERROR: {type(e).__name__}'::An unexpected error occurred!\nError:\n{exc}", file=stderr)
         raise e
