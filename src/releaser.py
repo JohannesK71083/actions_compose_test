@@ -256,6 +256,7 @@ def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None
     r = requests.get(f'https://api.github.com/repos/{repository_name}/releases?per_page=100', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
     for js in r.json():
         if js["tag_name"] == tag:
+            print(f"::warning ::deleted duplicate release with same tag (id: {js['id']})")
             requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
 
 def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str) -> str:
@@ -349,4 +350,4 @@ if __name__ == "__main__":
         ln = exc_tb.tb_lineno if exc_tb is not None else -1
         fname = path.split(exc_tb.tb_frame.f_code.co_filename)[1] if exc_tb is not None else ""
         print(f"::error ::{type(e).__name__}: {str(e)}\n{exc}", file=stderr)
-        raise e
+        exit()
