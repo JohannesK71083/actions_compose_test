@@ -252,8 +252,16 @@ def get_old_version(tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], old_
 
     return Version(major_version, minor_version, prerelease_version)
 
+def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None:
+    r = requests.get(f'https://api.github.com/repos/{repository_name}/releases?per_page=100', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
+    print("START")
+    for js in r.json():
+        if js["tag_name"] == tag:
+            print(js['id'])
+            requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
+    print("END")
 
-def increment_version(version: Version, mode: MODE, prerelease: bool) -> Version:
+def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str) -> str:
     new_version = list(version)
     match(mode):
         case MODE.MAJOR:
@@ -267,19 +275,7 @@ def increment_version(version: Version, mode: MODE, prerelease: bool) -> Version
                 raise ValueError("cannot create prerelease of already released version")
     if prerelease:
         new_version[2] += 1
-    return Version(*new_version)
-
-
-def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None:
-    r = requests.get(f'https://api.github.com/repos/{repository_name}/releases?per_page=100', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
-    print("START")
-    for js in r.json():
-        if js["tag_name"] == tag:
-            print(js['id'])
-            requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
-    print("END")
-
-def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str):
+    
     new_tag = ""
     for k, v in tag_components:
         if k == TAG_COMPONENTS.FILLER:
@@ -291,20 +287,20 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
             if prerelease:
                 new_tag += v
         elif k == TAG_COMPONENTS.MAJ:
-            new_tag += str(version.major)
+            new_tag += str(new_version[0])
         elif k == TAG_COMPONENTS.MIN:
-            new_tag += str(version.minor)
+            new_tag += str(new_version[1])
         elif k == TAG_COMPONENTS.PRE:
             if prerelease:
-                new_tag += str(version.prerelease)
+                new_tag += str(new_version[2])
 
     if prerelease:
         new_title = title_format.title_with_pre_text
     else:
         new_title = title_format.title_without_pre_text
-    new_title = new_title.replace("{Maj}", str(version.major))
-    new_title = new_title.replace("{Min}", str(version.minor))
-    new_title = new_title.replace("{Pre}", str(version.prerelease))
+    new_title = new_title.replace("{Maj}", str(new_version[0]))
+    new_title = new_title.replace("{Min}", str(new_version[1]))
+    new_title = new_title.replace("{Pre}", str(new_version[2]))
 
     ENVStorage.s_release_tag = new_tag
     ENVStorage.s_release_title = new_title
@@ -318,6 +314,8 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
             ENVStorage.s_release_body_path = TEMP_BODY_PATH
         case _:
             raise ValueError
+    
+    return new_tag
 
 
 if __name__ == "__main__":
@@ -327,14 +325,11 @@ if __name__ == "__main__":
     last_release_information = get_last_release_information(inputs["repository"], inputs["github_token"], inputs["ignore_drafts"])
 
     try:
-        old_version = get_old_version(tag_components, last_release_information["tag"])
+        version = get_old_version(tag_components, last_release_information["tag"])
     except Exception:
         exc = format_exc()
         print(f"Error while parsing old version! Using Version(1, 0, 0) instead.\nError:\n{exc}", file=stderr)
-        old_version = Version(1, 0, 0)
-
-    new_version = increment_version(old_version, inputs["mode"], inputs["prerelease"])
-    delete_duplicates(inputs["repository"], last_release_information["tag"], inputs["github_token"])
+        version = Version(1, 0, 0)
 
     if inputs["body_mode"] == BODY_MODE.REUSE_OLD_BODY:
         body = last_release_information["body"]
@@ -343,4 +338,5 @@ if __name__ == "__main__":
         body = inputs["body"]
         body_mode = inputs["body_mode"]
 
-    generate_new_release_information(new_version, tag_components, title_format, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body)
+    release_tag = generate_new_release_information(version, tag_components, title_format, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body)
+    delete_duplicates(inputs["repository"], release_tag, inputs["github_token"])
