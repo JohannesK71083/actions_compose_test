@@ -199,7 +199,7 @@ def get_last_release_information(repository_name: str, github_token: str, ignore
         if not (js["draft"] and ignore_drafts):
             break
     else:
-        print("::warning ::no existing " + "(non-draft) " if ignore_drafts else "" + "releases found!", file=stderr)
+        print("::warning title=no releases found::no existing " + "(non-draft) " if ignore_drafts else "" + "releases found!", file=stderr)
         js = {"tag_name": "", "body": ""}
 
     return ReleaseInformation(tag=js["tag_name"], body=js["body"])
@@ -256,7 +256,7 @@ def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None
     r = requests.get(f'https://api.github.com/repos/{repository_name}/releases?per_page=100', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
     for js in r.json():
         if js["tag_name"] == tag:
-            print(f"::warning ::deleted duplicate release with same tag (id: {js['id']})")
+            print(f"::warning title=duplicate release deleted::deleted duplicate release with same tag (id: {js['id']})")
             requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
 
 def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str) -> str:
@@ -327,7 +327,7 @@ def main() -> None:
     except Exception:
         exc = format_exc()
         if last_release_information["tag"] != "":
-            print(f"::error ::Error while parsing old version! Using Version(1, 0, 0) instead.\nError:\n{exc}", file=stderr)
+            print(f"::error title=VERSION_PARSING_ERROR::Error while parsing old version! Using Version(1, 0, 0) instead.\nError:\n{exc}", file=stderr)
         version = Version(1, 0, 0)
 
     if inputs["body_mode"] == BODY_MODE.REUSE_OLD_BODY:
@@ -349,5 +349,5 @@ if __name__ == "__main__":
         exc_type, exc_obj, exc_tb = exc_info()
         ln = exc_tb.tb_lineno if exc_tb is not None else -1
         fname = path.split(exc_tb.tb_frame.f_code.co_filename)[1] if exc_tb is not None else ""
-        print(f"::error ::{type(e).__name__}: {str(e)}\n{exc}", file=stderr)
+        print(f"::error title={{type(e).__name__}}::{type(e).__name__}: {str(e)}\n{exc}", file=stderr)
         exit()
