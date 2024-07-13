@@ -131,7 +131,13 @@ def parse_tag_format(tag_format: str) -> tuple[tuple[TAG_COMPONENTS, str], ...]:
     tag_ver_components_pos.sort(key=lambda x: x[1])
 
     opt_pre_text_pos: tuple[int, int] | None = None
-    for m in re.finditer("\\[.*?\\]", tag_format):
+    escape = r"(?<!\\)" # lookbehind the open/close that no \ is before that
+    open = r"\["
+    wildcard = r"[^\[]((?![^\\]\[).)*" # begins with not another opening [ and does not have an unescaped [ inside.
+    close = r"\]"
+    full_close = "(" + wildcard + escape + close + "|" + close + ")" # alt. path if it is empty []
+    regex = escape + open + full_close
+    for m in re.finditer(regex, tag_format):
         pos = m.start(0), m.end(0)
         if tag_format.find("{Pre}", pos[0], pos[1]) != -1 and tag_format.find("{Maj}", pos[0], pos[1]) == -1 and tag_format.find("{Min}", pos[0], pos[1]) == -1:
             opt_pre_text_pos = pos[0], pos[1]

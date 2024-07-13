@@ -9,7 +9,7 @@ inputs:
   prerelease: # true/false
     description: "Whether the release is a prerelease"
     required: true
-  tag_format: # must include {Maj}, {Min}, {Pre}; the text enclosed by [] and including the {Pre} will only be used if it is a prerelease (optional). 
+  tag_format: # must include {Maj}, {Min}, {Pre} and they cannot be touching; the text enclosed by [] and including the {Pre} will only be used if it is a prerelease ( optional; excape with \\[ & \\] ). 
     description: "The format of the tag"
     default: "V{Maj}.{Min}[_pre-{Pre}]"
   reuse_old_body: # true/false; priority: 0
