@@ -199,7 +199,7 @@ def get_last_release_information(repository_name: str, github_token: str, ignore
         if not (js["draft"] and ignore_drafts):
             break
     else:
-        print("No releases found!", file=stderr)
+        print("::warning NO_RELEASES_ERROR::No releases found!\ntests", file=stderr)
         js = {"tag_name": "", "body": ""}
 
     return ReleaseInformation(tag=js["tag_name"], body=js["body"])
@@ -254,12 +254,9 @@ def get_old_version(tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], old_
 
 def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None:
     r = requests.get(f'https://api.github.com/repos/{repository_name}/releases?per_page=100', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
-    print("START")
     for js in r.json():
         if js["tag_name"] == tag:
-            print(js['id'])
             requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
-    print("END")
 
 def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str) -> str:
     new_version = list(version)
@@ -328,6 +325,7 @@ if __name__ == "__main__":
         version = get_old_version(tag_components, last_release_information["tag"])
     except Exception:
         exc = format_exc()
+        print(f"::error VERSION_PARSING_ERROR::Error while parsing old version! Using Version(1, 0, 0) instead.", file=stderr)
         print(f"Error while parsing old version! Using Version(1, 0, 0) instead.\nError:\n{exc}", file=stderr)
         version = Version(1, 0, 0)
 
