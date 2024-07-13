@@ -199,7 +199,7 @@ def get_last_release_information(repository_name: str, github_token: str, ignore
         if not (js["draft"] and ignore_drafts):
             break
     else:
-        print("::warning ::No releases found!", file=stderr)
+        print("::warning ::No existing releases found!", file=stderr)
         js = {"tag_name": "", "body": ""}
 
     return ReleaseInformation(tag=js["tag_name"], body=js["body"])
@@ -316,8 +316,6 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
 
 
 def main() -> None:
-    raise RuntimeError("test123")
-
     inputs = validate_inputs()
     tag_components = parse_tag_format(inputs["tag_format"])
     title_format = parse_title_format(inputs["title_format"])
@@ -327,7 +325,8 @@ def main() -> None:
         version = get_old_version(tag_components, last_release_information["tag"])
     except Exception:
         exc = format_exc()
-        print(f"::error ::Error while parsing old version! Using Version(1, 0, 0) instead.\nError:\n{exc}", file=stderr)
+        if last_release_information["tag"] != "":
+            print(f"::error ::Error while parsing old version! Using Version(1, 0, 0) instead.\nError:\n{exc}", file=stderr)
         version = Version(1, 0, 0)
 
     if inputs["body_mode"] == BODY_MODE.REUSE_OLD_BODY:
