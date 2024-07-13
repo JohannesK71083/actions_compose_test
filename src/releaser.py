@@ -272,11 +272,12 @@ def increment_version(version: Version, mode: MODE, prerelease: bool) -> Version
 
 def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None:
     r = requests.get(f'https://api.github.com/repos/{repository_name}/releases?per_page=100', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
+    print("START")
     for js in r.json():
         if js["tag_name"] == tag:
             print(js['id'])
             requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
-
+    print("END")
 
 def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str):
     new_tag = ""
@@ -333,6 +334,7 @@ if __name__ == "__main__":
         old_version = Version(1, 0, 0)
 
     new_version = increment_version(old_version, inputs["mode"], inputs["prerelease"])
+    delete_duplicates(inputs["repository"], last_release_information["tag"], inputs["github_token"])
 
     if inputs["body_mode"] == BODY_MODE.REUSE_OLD_BODY:
         body = last_release_information["body"]
