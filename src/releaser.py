@@ -274,6 +274,7 @@ def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None
     r = requests.get(f'https://api.github.com/repos/{repository_name}/releases?per_page=100', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
     for js in r.json():
         if js["tag_name"] == tag:
+            print(js['id'])
             requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
 
 
