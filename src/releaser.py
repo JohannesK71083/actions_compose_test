@@ -199,7 +199,7 @@ def get_last_release_information(repository_name: str, github_token: str, ignore
         if not (js["draft"] and ignore_drafts):
             break
     else:
-        print("::warning NO_RELEASES_ERROR::No releases found!\ntests", file=stderr)
+        print("::warning NO_RELEASES_ERROR::No releases found!", file=stderr)
         js = {"tag_name": "", "body": ""}
 
     return ReleaseInformation(tag=js["tag_name"], body=js["body"])
@@ -315,7 +315,9 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
     return new_tag
 
 
-if __name__ == "__main__":
+def main() -> None:
+    raise RuntimeError("test123")
+
     inputs = validate_inputs()
     tag_components = parse_tag_format(inputs["tag_format"])
     title_format = parse_title_format(inputs["title_format"])
@@ -325,8 +327,7 @@ if __name__ == "__main__":
         version = get_old_version(tag_components, last_release_information["tag"])
     except Exception:
         exc = format_exc()
-        print(f"::error VERSION_PARSING_ERROR::Error while parsing old version! Using Version(1, 0, 0) instead.", file=stderr)
-        print(f"Error while parsing old version! Using Version(1, 0, 0) instead.\nError:\n{exc}", file=stderr)
+        print(f"::error VERSION_PARSING_ERROR::Error while parsing old version! Using Version(1, 0, 0) instead.\nError:\n{exc}", file=stderr)
         version = Version(1, 0, 0)
 
     if inputs["body_mode"] == BODY_MODE.REUSE_OLD_BODY:
@@ -338,3 +339,12 @@ if __name__ == "__main__":
 
     release_tag = generate_new_release_information(version, tag_components, title_format, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body)
     delete_duplicates(inputs["repository"], release_tag, inputs["github_token"])
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        exc = format_exc()
+        print(f"::error UNEXPECTED_ERROR: {type(e).__name__}::An unexpected error occurred!\nError:\n{exc}", file=stderr)
+        raise e
