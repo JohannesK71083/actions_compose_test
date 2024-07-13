@@ -9,7 +9,7 @@ import requests
 
 from GithubENVManager import GithubENVManager
 
-#TODO: escape []; implement title-format option: ignore drafts
+#TODO: implement title-format option: ignore drafts
 
 TEMP_BODY_PATH: str = "./temp_body.txt"
 
