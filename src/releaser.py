@@ -76,6 +76,7 @@ class ENVStorage(GithubENVManager):
     s_release_title: str
     s_release_body_path: str
 
+
 Version = NamedTuple("Version", [("major", int), ("minor", int), ("prerelease", int)])
 TitleFormat = NamedTuple("TitleFormat", [("title_with_pre_text", str), ("title_without_pre_text", str)])
 
@@ -97,7 +98,7 @@ def validate_inputs() -> Inputs:
 
     if ENVStorage.INPUT_REUSE_OLD_BODY not in ["true", "false"]:
         raise InputError("INPUT_REUSE_OLD_BODY", ENVStorage.INPUT_REUSE_OLD_BODY)
-    
+
     if ENVStorage.IGNORE_DRAFTS not in ["true", "false"]:
         raise InputError("IGNORE_DRAFTS", ENVStorage.IGNORE_DRAFTS)
     ignore_drafts = ENVStorage.IGNORE_DRAFTS == "true"
@@ -138,11 +139,11 @@ def parse_tag_format(tag_format: str) -> tuple[tuple[TAG_COMPONENTS, str], ...]:
     tag_ver_components_pos.sort(key=lambda x: x[1])
 
     opt_pre_text_pos: tuple[int, int] | None = None
-    escape = r"(?<!\\)" # lookbehind the open/close that no \ is before that
+    escape = r"(?<!\\)"  # lookbehind the open/close that no \ is before that
     open = r"\["
-    wildcard = r"[^\[]((?![^\\]\[).)*" # begins with not another opening [ and does not have an unescaped [ inside.
+    wildcard = r"[^\[]((?![^\\]\[).)*"  # begins with not another opening [ and does not have an unescaped [ inside.
     close = r"\]"
-    full_close = "(" + wildcard + escape + close + "|" + close + ")" # alt. path if it is empty []
+    full_close = "(" + wildcard + escape + close + "|" + close + ")"  # alt. path if it is empty []
     regex = escape + open + full_close
     for m in re.finditer(regex, tag_format):
         pos = m.start(0), m.end(0)
@@ -178,11 +179,11 @@ def parse_tag_format(tag_format: str) -> tuple[tuple[TAG_COMPONENTS, str], ...]:
 
 
 def parse_title_format(title_format: str) -> TitleFormat:
-    escape = r"(?<!\\)" # lookbehind the open/close that no \ is before that
+    escape = r"(?<!\\)"  # lookbehind the open/close that no \ is before that
     open = r"\["
-    wildcard = r"[^\[]((?![^\\]\[).)*" # begins with not another opening [ and does not have an unescaped [ inside.
+    wildcard = r"[^\[]((?![^\\]\[).)*"  # begins with not another opening [ and does not have an unescaped [ inside.
     close = r"\]"
-    full_close = "(" + wildcard + escape + close + "|" + close + ")" # alt. path if it is empty []
+    full_close = "(" + wildcard + escape + close + "|" + close + ")"  # alt. path if it is empty []
     regex = escape + open + full_close
     for m in re.finditer(regex, title_format):
         pos = m.start(0), m.end(0)
@@ -193,13 +194,13 @@ def parse_title_format(title_format: str) -> TitleFormat:
 
 
 def get_last_release_information(repository_name: str, github_token: str, ignore_drafts: bool) -> ReleaseInformation:
-    r = requests.get(f'https://api.github.com/repos/{repository_name}/releases', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
+    r = requests.get(f'https://api.github.com/repos/{repository_name}/releases?per_page=100', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
     for js in r.json():
         if not (js["draft"] and ignore_drafts):
             break
     else:
         print("No releases found!", file=stderr)
-        js = {"tag_name": "", "body": ""}	
+        js = {"tag_name": "", "body": ""}
 
     return ReleaseInformation(tag=js["tag_name"], body=js["body"])
 
@@ -252,7 +253,7 @@ def get_old_version(tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], old_
     return Version(major_version, minor_version, prerelease_version)
 
 
-def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str):
+def increment_version(version: Version, mode: MODE, prerelease: bool) -> Version:
     new_version = list(version)
     match(mode):
         case MODE.MAJOR:
@@ -264,10 +265,19 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
         case MODE.PRE:
             if new_version[2] == -1:
                 raise ValueError("cannot create prerelease of already released version")
-
     if prerelease:
         new_version[2] += 1
+    return Version(*new_version)
 
+
+def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None:
+    r = requests.get(f'https://api.github.com/repos/{repository_name}/releases?per_page=100', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
+    for js in r.json():
+        if js["tag_name"] == tag:
+            requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js["id"]}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
+
+
+def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str):
     new_tag = ""
     for k, v in tag_components:
         if k == TAG_COMPONENTS.FILLER:
@@ -279,20 +289,20 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
             if prerelease:
                 new_tag += v
         elif k == TAG_COMPONENTS.MAJ:
-            new_tag += str(new_version[0])
+            new_tag += str(version.major)
         elif k == TAG_COMPONENTS.MIN:
-            new_tag += str(new_version[1])
+            new_tag += str(version.minor)
         elif k == TAG_COMPONENTS.PRE:
             if prerelease:
-                new_tag += str(new_version[2])
+                new_tag += str(version.prerelease)
 
     if prerelease:
         new_title = title_format.title_with_pre_text
     else:
         new_title = title_format.title_without_pre_text
-    new_title = new_title.replace("{Maj}", str(new_version[0]))
-    new_title = new_title.replace("{Min}", str(new_version[1]))
-    new_title = new_title.replace("{Pre}", str(new_version[2]))
+    new_title = new_title.replace("{Maj}", str(version.major))
+    new_title = new_title.replace("{Min}", str(version.minor))
+    new_title = new_title.replace("{Pre}", str(version.prerelease))
 
     ENVStorage.s_release_tag = new_tag
     ENVStorage.s_release_title = new_title
@@ -313,14 +323,16 @@ if __name__ == "__main__":
     tag_components = parse_tag_format(inputs["tag_format"])
     title_format = parse_title_format(inputs["title_format"])
     last_release_information = get_last_release_information(inputs["repository"], inputs["github_token"], inputs["ignore_drafts"])
-    
+
     try:
-        version = get_old_version(tag_components, last_release_information["tag"])
+        old_version = get_old_version(tag_components, last_release_information["tag"])
     except Exception:
         exc = format_exc()
         print(f"Error while parsing old version! Using Version(1, 0, 0) instead.\nError:\n{exc}", file=stderr)
-        version = Version(1, 0, 0)
-    
+        old_version = Version(1, 0, 0)
+
+    new_version = increment_version(old_version, inputs["mode"], inputs["prerelease"])
+
     if inputs["body_mode"] == BODY_MODE.REUSE_OLD_BODY:
         body = last_release_information["body"]
         body_mode = BODY_MODE.BODY_FROM_INPUT
@@ -328,4 +340,4 @@ if __name__ == "__main__":
         body = inputs["body"]
         body_mode = inputs["body_mode"]
 
-    generate_new_release_information(version, tag_components, title_format, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body)
+    generate_new_release_information(new_version, tag_components, title_format, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body)
