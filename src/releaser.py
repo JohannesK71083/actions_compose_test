@@ -9,8 +9,6 @@ import requests
 
 from GithubENVManager import GithubENVManager
 
-#TODO: ignore drafts
-
 TEMP_BODY_PATH: str = "./temp_body.txt"
 
 
@@ -49,6 +47,7 @@ class Inputs(TypedDict):
     prerelease: bool
     tag_format: str
     title_format: str
+    ignore_drafts: bool
     body_mode: BODY_MODE
     body_path: str
     body: str
@@ -68,6 +67,7 @@ class ENVStorage(GithubENVManager):
     INPUT_PRERELEASE: str
     INPUT_TAG_FORMAT: str
     INPUT_TITLE_FORMAT: str
+    IGNORE_DRAFTS: str
     INPUT_REUSE_OLD_BODY: str
     INPUT_BODY_PATH: str
     INPUT_BODY: str
@@ -97,6 +97,10 @@ def validate_inputs() -> Inputs:
 
     if ENVStorage.INPUT_REUSE_OLD_BODY not in ["true", "false"]:
         raise InputError("INPUT_REUSE_OLD_BODY", ENVStorage.INPUT_REUSE_OLD_BODY)
+    
+    if ENVStorage.IGNORE_DRAFTS not in ["true", "false"]:
+        raise InputError("IGNORE_DRAFTS", ENVStorage.IGNORE_DRAFTS)
+    ignore_drafts = ENVStorage.IGNORE_DRAFTS == "true"
 
     github_token = ENVStorage.GITHUB_TOKEN
     work_path = ENVStorage.WORK_PATH
@@ -123,7 +127,7 @@ def validate_inputs() -> Inputs:
     if tag_format.find("{Maj}") == -1 or tag_format.find("{Min}") == -1 or tag_format.find("{Pre}") == -1:
         raise InputError("INPUT_TAG_FORMAT", tag_format)
 
-    return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, title_format=title_format, body_mode=body_mode, body_path=body_path, body=body)
+    return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, title_format=title_format, ignore_drafts=ignore_drafts, body_mode=body_mode, body_path=body_path, body=body)
 
 
 def parse_tag_format(tag_format: str) -> tuple[tuple[TAG_COMPONENTS, str], ...]:
@@ -188,11 +192,12 @@ def parse_title_format(title_format: str) -> TitleFormat:
         return TitleFormat(title_format, title_format)
 
 
-def get_last_release_information(repository_name: str, github_token: str) -> ReleaseInformation:
+def get_last_release_information(repository_name: str, github_token: str, ignore_drafts: bool) -> ReleaseInformation:
     r = requests.get(f'https://api.github.com/repos/{repository_name}/releases', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
-    try:
-        js = r.json()[0]
-    except IndexError:
+    for js in r.json():
+        if not (js["draft"] and ignore_drafts):
+            break
+    else:
         print("No releases found!", file=stderr)
         js = {"tag_name": "", "body": ""}	
 
@@ -307,7 +312,7 @@ if __name__ == "__main__":
     inputs = validate_inputs()
     tag_components = parse_tag_format(inputs["tag_format"])
     title_format = parse_title_format(inputs["title_format"])
-    last_release_information = get_last_release_information(inputs["repository"], inputs["github_token"])
+    last_release_information = get_last_release_information(inputs["repository"], inputs["github_token"], inputs["ignore_drafts"])
     
     try:
         version = get_old_version(tag_components, last_release_information["tag"])
