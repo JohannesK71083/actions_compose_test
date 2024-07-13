@@ -63,3 +63,8 @@ runs:
         name: ${{ env.s_release_title }}
         tag_name: ${{ env.s_release_tag }}
         make_latest: ${{ true }}
+    
+    - name: create log message
+      shell: bash
+      run: |
+        echo "::notice ::created release ${{ env.s_release_tag }} with title ${{ env.s_release_title }} and prerelease: ${{ inputs.prerelease }}"
