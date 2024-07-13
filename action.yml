@@ -9,9 +9,12 @@ inputs:
   prerelease: # true/false
     description: "Whether the release is a prerelease"
     required: true
-  tag_format: # must include {Maj}, {Min}, {Pre} and they cannot be touching; the text enclosed by [] and including the {Pre} will only be used if it is a prerelease ( optional; excape with \\[ & \\] ). 
+  tag_format: # must include {Maj}, {Min}, {Pre} ONCE and they cannot be touching; the text enclosed by [] and including the {Pre} will only be used if it is a prerelease ( optional; excape with \\[ & \\] ). 
     description: "The format of the tag"
     default: "V{Maj}.{Min}[_pre-{Pre}]"
+  title_format: # can include {Maj}, {Min}, {Pre} multiple times; the text enclosed by [] and including the {Pre} will only be used if it is a prerelease ( optional; excape with \\[ & \\] )
+    description: "The format of the title"
+    default: "Version {Maj}.{Min}[ pre-{Pre}]"
   reuse_old_body: # true/false; priority: 0
     description: "Whether to reuse the old release body"
     default: "true"
@@ -36,6 +39,7 @@ runs:
         INPUT_MODE: ${{ inputs.mode }}
         INPUT_PRERELEASE: ${{ inputs.prerelease }}
         INPUT_TAG_FORMAT: ${{ inputs.tag_format }}
+        INPUT_TITLE_FORMAT: ${{ inputs.title_format }}
         INPUT_REUSE_OLD_BODY: ${{ inputs.reuse_old_body }}
         INPUT_BODY_PATH: ${{ inputs.body_path }}
         INPUT_BODY: ${{ inputs.body }}

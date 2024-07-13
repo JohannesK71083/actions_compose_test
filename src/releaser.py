@@ -9,7 +9,7 @@ import requests
 
 from GithubENVManager import GithubENVManager
 
-#TODO: implement title-format option: ignore drafts
+#TODO: ignore drafts
 
 TEMP_BODY_PATH: str = "./temp_body.txt"
 
@@ -48,6 +48,7 @@ class Inputs(TypedDict):
     mode: MODE
     prerelease: bool
     tag_format: str
+    title_format: str
     body_mode: BODY_MODE
     body_path: str
     body: str
@@ -66,6 +67,7 @@ class ENVStorage(GithubENVManager):
     INPUT_MODE: str
     INPUT_PRERELEASE: str
     INPUT_TAG_FORMAT: str
+    INPUT_TITLE_FORMAT: str
     INPUT_REUSE_OLD_BODY: str
     INPUT_BODY_PATH: str
     INPUT_BODY: str
@@ -75,6 +77,7 @@ class ENVStorage(GithubENVManager):
     s_release_body_path: str
 
 Version = NamedTuple("Version", [("major", int), ("minor", int), ("prerelease", int)])
+TitleFormat = NamedTuple("TitleFormat", [("title_with_pre_text", str), ("title_without_pre_text", str)])
 
 
 def validate_inputs() -> Inputs:
@@ -99,6 +102,7 @@ def validate_inputs() -> Inputs:
     work_path = ENVStorage.WORK_PATH
     repository = ENVStorage.REPOSITORY
     tag_format = ENVStorage.INPUT_TAG_FORMAT
+    title_format = ENVStorage.INPUT_TITLE_FORMAT
     body_path = ENVStorage.INPUT_BODY_PATH
     body = ENVStorage.INPUT_BODY
 
@@ -116,11 +120,10 @@ def validate_inputs() -> Inputs:
     if ENVStorage.INPUT_MODE == "pre" and ENVStorage.INPUT_PRERELEASE != "true":
         raise ValueError("mode 'pre' requires 'prerelease' to be True.")
 
-    # TODO
     if tag_format.find("{Maj}") == -1 or tag_format.find("{Min}") == -1 or tag_format.find("{Pre}") == -1:
         raise InputError("INPUT_TAG_FORMAT", tag_format)
 
-    return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, body_mode=body_mode, body_path=body_path, body=body)
+    return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, title_format=title_format, body_mode=body_mode, body_path=body_path, body=body)
 
 
 def parse_tag_format(tag_format: str) -> tuple[tuple[TAG_COMPONENTS, str], ...]:
@@ -168,6 +171,21 @@ def parse_tag_format(tag_format: str) -> tuple[tuple[TAG_COMPONENTS, str], ...]:
     add_tag_component(TAG_COMPONENTS.FILLER, tag_format[begin_index:])
 
     return tuple(tag_components)
+
+
+def parse_title_format(title_format: str) -> TitleFormat:
+    escape = r"(?<!\\)" # lookbehind the open/close that no \ is before that
+    open = r"\["
+    wildcard = r"[^\[]((?![^\\]\[).)*" # begins with not another opening [ and does not have an unescaped [ inside.
+    close = r"\]"
+    full_close = "(" + wildcard + escape + close + "|" + close + ")" # alt. path if it is empty []
+    regex = escape + open + full_close
+    for m in re.finditer(regex, title_format):
+        pos = m.start(0), m.end(0)
+        if title_format.find("{Pre}", pos[0], pos[1]) != -1 and title_format.find("{Maj}", pos[0], pos[1]) == -1 and title_format.find("{Min}", pos[0], pos[1]) == -1:
+            return TitleFormat(title_format, title_format[:pos[0]] + title_format[pos[1]:])
+    else:
+        return TitleFormat(title_format, title_format)
 
 
 def get_last_release_information(repository_name: str, github_token: str) -> ReleaseInformation:
@@ -229,7 +247,7 @@ def get_old_version(tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], old_
     return Version(major_version, minor_version, prerelease_version)
 
 
-def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str):
+def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str):
     new_version = list(version)
     match(mode):
         case MODE.MAJOR:
@@ -263,7 +281,13 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
             if prerelease:
                 new_tag += str(new_version[2])
 
-    new_title = f"Version {new_version[0]}.{new_version[1]}" + f" pre-{new_version[2]}" if prerelease else ""
+    if prerelease:
+        new_title = title_format.title_with_pre_text
+    else:
+        new_title = title_format.title_without_pre_text
+    new_title = new_title.replace("{Maj}", str(new_version[0]))
+    new_title = new_title.replace("{Min}", str(new_version[1]))
+    new_title = new_title.replace("{Pre}", str(new_version[2]))
 
     ENVStorage.s_release_tag = new_tag
     ENVStorage.s_release_title = new_title
@@ -282,17 +306,21 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
 if __name__ == "__main__":
     inputs = validate_inputs()
     tag_components = parse_tag_format(inputs["tag_format"])
+    title_format = parse_title_format(inputs["title_format"])
     last_release_information = get_last_release_information(inputs["repository"], inputs["github_token"])
+    
     try:
         version = get_old_version(tag_components, last_release_information["tag"])
     except Exception:
         exc = format_exc()
         print(f"Error while parsing old version! Using Version(1, 0, 0) instead.\nError:\n{exc}", file=stderr)
         version = Version(1, 0, 0)
+    
     if inputs["body_mode"] == BODY_MODE.REUSE_OLD_BODY:
         body = last_release_information["body"]
         body_mode = BODY_MODE.BODY_FROM_INPUT
     else:
         body = inputs["body"]
         body_mode = inputs["body_mode"]
-    generate_new_release_information(version, tag_components, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body)
+
+    generate_new_release_information(version, tag_components, title_format, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body)
