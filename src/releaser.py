@@ -274,7 +274,7 @@ def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None
     r = requests.get(f'https://api.github.com/repos/{repository_name}/releases?per_page=100', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
     for js in r.json():
         if js["tag_name"] == tag:
-            requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js["id"]}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
+            requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
 
 
 def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str):
