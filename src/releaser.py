@@ -1,7 +1,7 @@
 from enum import Enum, auto
 from os import path
 import re
-from sys import stderr
+from sys import exc_info, stderr
 from traceback import format_exc
 from typing import Any, NamedTuple, Optional, TypedDict
 
@@ -346,5 +346,8 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         exc = format_exc()
-        print(f"::error title='UNEXPECTED_ERROR: {type(e).__name__}'::An unexpected error occurred!\nError:\n{exc}", file=stderr)
+        exc_type, exc_obj, exc_tb = exc_info()
+        ln = exc_tb.tb_lineno if exc_tb is not None else -1
+        fname = path.split(exc_tb.tb_frame.f_code.co_filename)[1] if exc_tb is not None else ""
+        print(f"::error file={fname},line={ln}::{type(e).__name__}: {str(e)}\n{exc}", file=stderr)
         raise e
