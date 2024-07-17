@@ -9,7 +9,7 @@ inputs:
   prerelease: # true/false
     description: "Whether the release is a prerelease"
     required: true
-  tag_format: # must include {Maj}, {Min}, {Pre} ONCE and they cannot be touching; the text enclosed by [] and including the {Pre} will only be used if it is a prerelease ( optional; excape with \\[ & \\] ). 
+  tag_format: # must include {Maj}, {Min}, {Pre} ONCE and they cannot be touching; the text enclosed by [] and including the {Pre} will only be used if it is a prerelease ( optional; excape with \\[ & \\] ).
     description: "The format of the tag"
     default: "V{Maj}.{Min}[_pre-{Pre}]"
   title_format: # can include {Maj}, {Min}, {Pre} multiple times; the text enclosed by [] and including the {Pre} will only be used if it is a prerelease ( optional; excape with \\[ & \\] )
@@ -63,7 +63,7 @@ runs:
         name: ${{ env.s_release_title }}
         tag_name: ${{ env.s_release_tag }}
         make_latest: ${{ true }}
-    
+
     - name: create log message
       shell: bash
       run: |

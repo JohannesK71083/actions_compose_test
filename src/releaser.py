@@ -252,12 +252,14 @@ def get_old_version(tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], old_
 
     return Version(major_version, minor_version, prerelease_version)
 
+
 def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None:
     r = requests.get(f'https://api.github.com/repos/{repository_name}/releases?per_page=100', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
     for js in r.json():
         if js["tag_name"] == tag:
             print(f"::warning title=duplicate release deleted::deleted duplicate release with same tag (id: {js['id']})")
             requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
+
 
 def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str) -> str:
     new_version = list(version)
@@ -273,7 +275,7 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
                 raise ValueError("cannot create prerelease of already released version")
     if prerelease:
         new_version[2] += 1
-    
+
     new_tag = ""
     for k, v in tag_components:
         if k == TAG_COMPONENTS.FILLER:
@@ -312,7 +314,7 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
             ENVStorage.s_release_body_path = TEMP_BODY_PATH
         case _:
             raise ValueError
-    
+
     return new_tag
 
 
