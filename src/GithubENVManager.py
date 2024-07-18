@@ -16,7 +16,6 @@ class __GithubENVManagerMeta(type):
             raise AttributeError(f"invalid attribute {__name}")
 
         st = environ[__name]
-        st = st.replace("\\n", "\n")
 
         return get_type_hints(self)[__name](st)
 
@@ -28,10 +27,9 @@ class __GithubENVManagerMeta(type):
             st = "true" if __value else "false"
         else:
             st = str(__value)
-        st = st.replace("\r", "").replace("\n", "\\n")
 
         with open(environ["GITHUB_ENV"], "a") as f:
-            f.write(f"{__name}={st}\n")
+            f.write(f"{__name}<<EOF\n{st}\nEOF\n")
 
 
 class GithubENVManager(metaclass=__GithubENVManagerMeta):

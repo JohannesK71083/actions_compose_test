@@ -1,6 +1,8 @@
 name: "Releaser"
 description: "Create a release"
 
+#TODO: desriptions
+
 inputs:
   # by conflicting inputs -> lowest priority wins
   mode: # minor/major/pre
@@ -27,6 +29,9 @@ inputs:
   body: # str; priority: 2
     description: "The release body"
     default: ""
+  full_source_code_name: # str; without file extention; uses qmonnet/git-archive-all-action; feature disabled when string empty
+    description: "The name of the source code"
+    default: ""
 
 runs:
   using: "composite"
@@ -48,6 +53,12 @@ runs:
         INPUT_BODY_PATH: ${{ inputs.body_path }}
         INPUT_BODY: ${{ inputs.body }}
 
+    - name: Git-archive-all
+      uses: qmonnet/git-archive-all-action@main
+      if: ${{ inputs.full_source_code_name != '' }}
+      with:
+        output-files: "${{ github.workspace }}/${{ inputs.full_source_code_name }}.zip"
+
     # - shell: bash
     #   run: |
     #     echo $s_release_tag
@@ -55,7 +66,7 @@ runs:
     #     echo $s_release_body_path
 
     - name: Create Release
-      uses: softprops/action-gh-release@v2.0.6
+      uses: softprops/action-gh-release@master
       with:
         draft: ${{ true }}
         prerelease: ${{ inputs.prerelease }}
