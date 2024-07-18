@@ -4,6 +4,7 @@ import re
 from sys import exc_info, stderr
 from traceback import format_exc
 from typing import Any, NamedTuple, Optional, TypedDict
+from pathvalidate import sanitize_filename
 
 import requests
 
@@ -51,6 +52,7 @@ class Inputs(TypedDict):
     body_mode: BODY_MODE
     body_path: str
     body: str
+    full_source_code_name: str
 
 
 class ReleaseInformation(TypedDict):
@@ -71,10 +73,12 @@ class ENVStorage(GithubENVManager):
     INPUT_REUSE_OLD_BODY: str
     INPUT_BODY_PATH: str
     INPUT_BODY: str
+    INPUT_FULL_SOURCE_CODE_NAME: str
 
     s_release_tag: str
     s_release_title: str
     s_release_body_path: str
+    s_files: str
 
 
 Version = NamedTuple("Version", [("major", int), ("minor", int), ("prerelease", int)])
@@ -128,7 +132,10 @@ def validate_inputs() -> Inputs:
     if tag_format.find("{Maj}") == -1 or tag_format.find("{Min}") == -1 or tag_format.find("{Pre}") == -1:
         raise InputError("INPUT_TAG_FORMAT", tag_format)
 
-    return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, title_format=title_format, ignore_drafts=ignore_drafts, body_mode=body_mode, body_path=body_path, body=body)
+    full_source_code_name = sanitize_filename(ENVStorage.INPUT_FULL_SOURCE_CODE_NAME)
+    full_source_code_name = full_source_code_name.removesuffix(".zip")
+
+    return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, title_format=title_format, ignore_drafts=ignore_drafts, body_mode=body_mode, body_path=body_path, body=body, full_source_code_name=full_source_code_name)
 
 
 def parse_tag_format(tag_format: str) -> tuple[tuple[TAG_COMPONENTS, str], ...]:
@@ -261,7 +268,7 @@ def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None
             requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
 
 
-def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str) -> str:
+def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str, full_source_code_path: str) -> str:
     new_version = list(version)
     match(mode):
         case MODE.MAJOR:
@@ -315,6 +322,8 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
         case _:
             raise ValueError
 
+    ENVStorage.s_files = full_source_code_path
+
     return new_tag
 
 
@@ -339,7 +348,7 @@ def main() -> None:
         body = inputs["body"]
         body_mode = inputs["body_mode"]
 
-    release_tag = generate_new_release_information(version, tag_components, title_format, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body)
+    release_tag = generate_new_release_information(version, tag_components, title_format, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body, inputs["full_source_code_name"])
     delete_duplicates(inputs["repository"], release_tag, inputs["github_token"])
 
 

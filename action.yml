@@ -52,6 +52,7 @@ runs:
         INPUT_REUSE_OLD_BODY: ${{ inputs.reuse_old_body }}
         INPUT_BODY_PATH: ${{ inputs.body_path }}
         INPUT_BODY: ${{ inputs.body }}
+        INPUT_FULL_SOURCE_CODE_NAME: ${{ inputs.full_source_code_name }}
 
     - name: Git-archive-all
       uses: qmonnet/git-archive-all-action@main
