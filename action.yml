@@ -59,7 +59,7 @@ runs:
       uses: actions/checkout@v4
       if: ${{ inputs.full_source_code_name != '' }}
       with:
-        path: "${{ github.action_path }}/checkout"
+        path: "${{ github.workspace }}/checkout"
 
     - name: Git-archive-all
       uses: qmonnet/git-archive-all-action@main
