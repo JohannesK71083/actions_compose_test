@@ -39,6 +39,7 @@ runs:
     - name: execute python script
       shell: bash
       run: |
+        pip install --upgrade --upgrade-strategy eager -r "${{ github.action_path }}/requirements.txt"
         python -u "${{ github.action_path }}/src/releaser.py"
       env:
         GITHUB_TOKEN: ${{ github.token }}
