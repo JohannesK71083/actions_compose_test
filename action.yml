@@ -67,7 +67,7 @@ runs:
       with:
         output-files: "${{ github.workspace }}/${{ env.s_release_full_source_code_name }}.zip"
         base-repo: "${{ github.workspace }}/checkout"
-        prefix: ""
+        prefix: "="
 
     # - shell: bash
     #   run: |
