@@ -83,6 +83,7 @@ runs:
         name: ${{ env.s_release_title }}
         tag_name: ${{ env.s_release_tag }}
         make_latest: ${{ true }}
+        files: ${{ env.s_release_files }}
 
     - name: create log message
       shell: bash

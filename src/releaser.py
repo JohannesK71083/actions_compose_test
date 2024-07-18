@@ -78,7 +78,7 @@ class ENVStorage(GithubENVManager):
     s_release_tag: str
     s_release_title: str
     s_release_body_path: str
-    s_files: str
+    s_release_files: str
 
 
 Version = NamedTuple("Version", [("major", int), ("minor", int), ("prerelease", int)])
@@ -322,7 +322,7 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
         case _:
             raise ValueError
 
-    ENVStorage.s_files = full_source_code_path
+    ENVStorage.s_release_files = full_source_code_path
 
     return new_tag
 
