@@ -79,6 +79,7 @@ class ENVStorage(GithubENVManager):
     s_release_title: str
     s_release_body_path: str
     s_release_files: str
+    s_release_full_source_code_name: str
 
 
 Version = NamedTuple("Version", [("major", int), ("minor", int), ("prerelease", int)])
@@ -268,7 +269,7 @@ def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None
             requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
 
 
-def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str, full_source_code_path: str) -> str:
+def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str, full_source_code_name: str) -> str:
     new_version = list(version)
     match(mode):
         case MODE.MAJOR:
@@ -322,7 +323,8 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
         case _:
             raise ValueError
 
-    ENVStorage.s_release_files = full_source_code_path
+    ENVStorage.s_release_full_source_code_name = full_source_code_name
+    ENVStorage.s_release_files = path.join(ENVStorage.WORK_PATH, full_source_code_name + ".zip")
 
     return new_tag
 

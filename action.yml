@@ -57,15 +57,15 @@ runs:
 
     - name: Checkout
       uses: actions/checkout@v4
-      if: ${{ inputs.full_source_code_name != '' }}
+      if: ${{ env.s_release_full_source_code_name != '' }}
       with:
         path: "${{ github.workspace }}/checkout"
 
     - name: Git-archive-all
       uses: qmonnet/git-archive-all-action@main
-      if: ${{ inputs.full_source_code_name != '' }}
+      if: ${{ env.s_release_full_source_code_name != '' }}
       with:
-        output-files: "${{ github.workspace }}/${{ inputs.full_source_code_name }}.zip"
+        output-files: "${{ github.workspace }}/${{ env.s_release_full_source_code_name }}.zip"
         base-repo: "${{ github.workspace }}/checkout"
 
     # - shell: bash
