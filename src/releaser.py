@@ -199,7 +199,7 @@ def get_last_release_information(repository_name: str, github_token: str, ignore
         if not (js["draft"] and ignore_drafts):
             break
     else:
-        print("::warning title=no releases found::no existing " + "(non-draft) " if ignore_drafts else "" + "releases found!", file=stderr)
+        print("::warning title=no releases found::no existing " + ("(non-draft) " if ignore_drafts else "") + "releases found!", file=stderr)
         js = {"tag_name": "", "body": ""}
 
     return ReleaseInformation(tag=js["tag_name"], body=js["body"])
