@@ -63,7 +63,7 @@ runs:
         path: "${{ github.workspace }}/checkout"
 
     - name: Git-archive-all
-      uses: Jqmonnet/git-archive-all-action@main
+      uses: qmonnet/git-archive-all-action@main
       if: ${{ steps.py.outputs.full_source_code_filename != '' }}
       with:
         output-files: "${{ github.workspace }}/${{ steps.py.outputs.full_source_code_filename }}.zip"
