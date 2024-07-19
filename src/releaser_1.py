@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from os import path, system
+from os import path
 import re
 from sys import exc_info, stderr
 from traceback import format_exc
@@ -18,6 +18,7 @@ def print_to_err(x: str) -> None:
 
 
 def command(cmd: str) -> None:
+    from os import system
     if (e := system(cmd)) != 0:
         exit(e)
 
@@ -338,9 +339,9 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
     if version_text_repo_file_path != None:
         with open(version_text_repo_file_path, "w") as f:
             f.write(new_version_text.replace("{Maj}", str(new_version[0])).replace("{Min}", str(new_version[1])).replace("{Pre}", str(new_version[2])))
-        system(f"git -C {ENVStorage.WORK_PATH}/checkout add {version_text_repo_file_path}")
-        system(f"git -C {ENVStorage.WORK_PATH}/checkout commit -m 'Update version text file'")  # NOTE
-        system(f"git -C {ENVStorage.WORK_PATH}/checkout push")
+        command(f"git -C {ENVStorage.WORK_PATH}/checkout add {version_text_repo_file_path}")
+        command(f"git -C {ENVStorage.WORK_PATH}/checkout commit -m 'Update version text file'")  # NOTE
+        command(f"git -C {ENVStorage.WORK_PATH}/checkout push")
 
     OutputStorage.tag = new_tag
     OutputStorage.title = new_title
