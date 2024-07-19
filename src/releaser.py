@@ -364,5 +364,5 @@ if __name__ == "__main__":
         exc_type, exc_obj, exc_tb = exc_info()
         ln = exc_tb.tb_lineno if exc_tb is not None else -1
         fname = path.split(exc_tb.tb_frame.f_code.co_filename)[1] if exc_tb is not None else ""
-        print(f"::error title={{type(e).__name__}}::{type(e).__name__}: {str(e)}\n{exc}", file=stderr)
+        print(f"::error title={type(e).__name__}::{type(e).__name__}: {str(e)}\n{exc}", file=stderr)
         exit(1)
