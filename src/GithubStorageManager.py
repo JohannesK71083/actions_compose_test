@@ -55,6 +55,10 @@ class __GithubOutputManagerMeta(type):
         return self._outputs[name]
 
     def __setattr__(self, name: str, value: Any) -> None:
+        if name == "_outputs":
+            super().__setattr__(name, value)
+            return
+
         if name not in self.__annotations__.keys():
             raise AttributeError(f"invalid attribute {name}")
 
