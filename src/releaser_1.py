@@ -195,7 +195,7 @@ def parse_tag_format(tag_format: str) -> tuple[tuple[TAG_COMPONENTS, str], ...]:
 def parse_title_format(title_format: str) -> TitleFormat:
     escape = r"(?<!\\)"  # lookbehind the open/close that no \ is before that
     open = r"\["
-    wildcard = r"[^\[]((?![^\\]\[).)*"  # begins with not another opening [ and does not have an unescaped [ inside.
+    wildcard = r"[^\[]((?![^\\]\[).)*?"  # begins with not another opening [ and does not have an unescaped [ inside.
     close = r"\]"
     full_close = "(" + wildcard + escape + close + "|" + close + ")"  # alt. path if it is empty []
     regex = escape + open + full_close
