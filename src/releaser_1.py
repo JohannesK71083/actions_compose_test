@@ -63,9 +63,9 @@ class Inputs(TypedDict):
     body_path: str
     body: str
     full_source_code_filename: str
+    commit_message: str
     version_text_repo_file_path: Optional[str]
     version_text_format: str
-    version_text_commit_message: str
 
 
 class ReleaseInformation(TypedDict):
@@ -87,9 +87,9 @@ class ENVStorage(GithubENVManager):
     INPUT_BODY_PATH: str
     INPUT_BODY: str
     INPUT_FULL_SOURCE_CODE_FILENAME: str
+    INPUT_COMMIT_MESSAGE: str
     INPUT_VERSION_TEXT_REPO_FILE: str
     INPUT_VERSION_TEXT_FORMAT: str
-    INPUT_VERSION_TEXT_COMMIT_MESSAGE: str
 
 
 class OutputStorage(GithubOutputManager):
@@ -134,7 +134,7 @@ def validate_inputs() -> Inputs:
     body_path = ENVStorage.INPUT_BODY_PATH
     body = ENVStorage.INPUT_BODY
     version_text_format = ENVStorage.INPUT_VERSION_TEXT_FORMAT
-    version_text_commit_message = ENVStorage.INPUT_VERSION_TEXT_COMMIT_MESSAGE
+    commit_message = ENVStorage.INPUT_COMMIT_MESSAGE
 
     if ENVStorage.INPUT_REUSE_OLD_BODY == "true":
         body_mode = BODY_MODE.REUSE_OLD_BODY
@@ -153,6 +153,9 @@ def validate_inputs() -> Inputs:
     if tag_format.find("{Maj}") == -1 or tag_format.find("{Min}") == -1 or tag_format.find("{Pre}") == -1:
         raise InputError("INPUT_TAG_FORMAT", tag_format)
 
+    if commit_message == "" and ENVStorage.INPUT_VERSION_TEXT_REPO_FILE != "":
+        raise ValueError("commit message must be set if version text repo file is set.")
+
     full_source_code_filename = sanitize_filename(ENVStorage.INPUT_FULL_SOURCE_CODE_FILENAME)
     full_source_code_filename = full_source_code_filename.removesuffix(".zip")
 
@@ -162,7 +165,7 @@ def validate_inputs() -> Inputs:
     else:
         version_text_repo_file_path = None
 
-    return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, title_format=title_format, ignore_drafts=ignore_drafts, body_mode=body_mode, body_path=body_path, body=body, full_source_code_filename=full_source_code_filename, version_text_repo_file_path=version_text_repo_file_path, version_text_format=version_text_format, version_text_commit_message=version_text_commit_message)
+    return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, title_format=title_format, ignore_drafts=ignore_drafts, body_mode=body_mode, body_path=body_path, body=body, full_source_code_filename=full_source_code_filename, commit_message=commit_message, version_text_repo_file_path=version_text_repo_file_path, version_text_format=version_text_format)
 
 
 def parse_tag_format(tag_format: str) -> tuple[tuple[TAG_COMPONENTS, str], ...]:
@@ -295,7 +298,7 @@ def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None
             requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
 
 
-def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str, full_source_code_filename: str, version_text_repo_file_path: Optional[str], version_text_format: TitleFormat, version_text_commit_message: str) -> str:
+def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str, full_source_code_filename: str, version_text_repo_file_path: Optional[str], version_text_format: TitleFormat, commit_message: str) -> str:
     new_version = list(version)
     match(mode):
         case MODE.MAJOR:
@@ -337,7 +340,7 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
 
     new_title = new_title.replace("{Maj}", str(new_version[0])).replace("{Min}", str(new_version[1])).replace("{Pre}", str(new_version[2]))
     new_version_text = new_version_text.replace("{Maj}", str(new_version[0])).replace("{Min}", str(new_version[1])).replace("{Pre}", str(new_version[2]))
-    version_text_commit_message = version_text_commit_message.replace("{VT}", new_version_text)
+    commit_message = commit_message.replace("{VT}", new_version_text)
 
     if version_text_repo_file_path != None:
         with open(version_text_repo_file_path, "r") as f:
@@ -346,8 +349,10 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
             with open(version_text_repo_file_path, "w") as f:
                 f.write(new_version_text)
             command(f"git -C {ENVStorage.WORK_PATH}/checkout add {version_text_repo_file_path}")
-            command(f"git -C {ENVStorage.WORK_PATH}/checkout -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m '{version_text_commit_message}' --allow-empty-message --no-verify")
-            command(f"git -C {ENVStorage.WORK_PATH}/checkout push")
+
+    if commit_message != "":
+        command(f"git -C {ENVStorage.WORK_PATH}/checkout -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m '{commit_message}' --allow-empty --no-verify")
+        command(f"git -C {ENVStorage.WORK_PATH}/checkout push")
 
     OutputStorage.tag = new_tag
     OutputStorage.title = new_title
@@ -390,7 +395,7 @@ def main() -> None:
         body = inputs["body"]
         body_mode = inputs["body_mode"]
 
-    release_tag = generate_new_release_information(version, tag_components, title_format, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body, inputs["full_source_code_filename"], inputs["version_text_repo_file_path"], version_text_format, inputs["version_text_commit_message"])
+    release_tag = generate_new_release_information(version, tag_components, title_format, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body, inputs["full_source_code_filename"], inputs["version_text_repo_file_path"], version_text_format, inputs["commit_message"])
     delete_duplicates(inputs["repository"], release_tag, inputs["github_token"])
 
 
