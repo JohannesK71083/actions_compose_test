@@ -29,7 +29,7 @@ inputs:
   body: # str; priority: 2
     description: "The release body"
     default: ""
-  full_source_code_name: # str; without file extention; uses qmonnet/git-archive-all-action; feature disabled when string empty
+  full_source_code_filename: # str; without file extention; uses qmonnet/git-archive-all-action; feature disabled when string empty
     description: "The name of the source code"
     default: ""
 
@@ -54,19 +54,19 @@ runs:
         INPUT_REUSE_OLD_BODY: ${{ inputs.reuse_old_body }}
         INPUT_BODY_PATH: ${{ inputs.body_path }}
         INPUT_BODY: ${{ inputs.body }}
-        INPUT_FULL_SOURCE_CODE_NAME: ${{ inputs.full_source_code_name }}
+        INPUT_FULL_SOURCE_CODE_FILENAME: ${{ inputs.full_source_file_code_name }}
 
     - name: Checkout
       uses: actions/checkout@v4
-      if: ${{ steps.py.outputs.full_source_code_name != '' }}
+      if: ${{ steps.py.outputs.full_source_code_filename != '' }}
       with:
         path: "${{ github.workspace }}/checkout"
 
     - name: Git-archive-all
       uses: JohannesK71083/git-archive-all-action@main
-      if: ${{ steps.py.outputs.full_source_code_name != '' }}
+      if: ${{ steps.py.outputs.full_source_code_filename != '' }}
       with:
-        output-files: "${{ github.workspace }}/${{ steps.py.outputs.full_source_code_name }}.zip"
+        output-files: "${{ github.workspace }}/${{ steps.py.outputs.full_source_code_filename }}.zip"
         base-repo: "${{ github.workspace }}/checkout"
         prefix: ""
 
