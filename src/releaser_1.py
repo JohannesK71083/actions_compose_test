@@ -149,7 +149,7 @@ def validate_inputs() -> Inputs:
 
     version_text_repo_file = sanitize_filename(ENVStorage.INPUT_VERSION_TEXT_REPO_FILE)
     if version_text_repo_file != "":
-        print("HÄÄÄ:", path.relpath(version_text_repo_file, "/"))
+        print("HÄÄÄ:", version_text_repo_file, path.relpath(version_text_repo_file, "/"))
         version_text_repo_file_path = path.normpath(path.join(f"{work_path}/checkout/", path.relpath(version_text_repo_file, "/")))
     else:
         version_text_repo_file_path = None
