@@ -4,7 +4,7 @@ import re
 from sys import exc_info, stderr
 from traceback import format_exc
 from typing import Any, NamedTuple, Optional, TypedDict
-from pathvalidate import sanitize_filename
+from pathvalidate import sanitize_filename, sanitize_filepath
 
 import requests
 
@@ -147,9 +147,8 @@ def validate_inputs() -> Inputs:
     full_source_code_filename = sanitize_filename(ENVStorage.INPUT_FULL_SOURCE_CODE_FILENAME)
     full_source_code_filename = full_source_code_filename.removesuffix(".zip")
 
-    version_text_repo_file = sanitize_filename(ENVStorage.INPUT_VERSION_TEXT_REPO_FILE)
+    version_text_repo_file = "/" + sanitize_filepath(ENVStorage.INPUT_VERSION_TEXT_REPO_FILE).lstrip("/")
     if version_text_repo_file != "":
-        print("HÄÄÄ:", version_text_repo_file, path.relpath(version_text_repo_file, "/"))
         version_text_repo_file_path = path.normpath(path.join(f"{work_path}/checkout/", path.relpath(version_text_repo_file, "/")))
     else:
         version_text_repo_file_path = None
