@@ -90,4 +90,4 @@ runs:
     - name: create log message
       shell: bash
       run: |
-        echo "::notice title=created release::created release '${{ env.s_release_tag }}' with the title '${{ env.s_release_title }}' and prerelease: ${{ inputs.prerelease }} at: ${{ steps.create_release.outputs.url }}"
+        echo "::notice title=created release::created release '${{ env.s_release_tag }}' with the title '${{ env.s_release_title }}' and prerelease: '${{ inputs.prerelease }}'' at: ${{ steps.create_release.outputs.url }}"
