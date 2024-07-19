@@ -335,16 +335,18 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
         new_title = title_format.title_without_pre_text
         new_version_text = version_text_format.title_without_pre_text
 
-    new_title = new_title.replace("{Maj}", str(new_version[0]))
-    new_title = new_title.replace("{Min}", str(new_version[1]))
-    new_title = new_title.replace("{Pre}", str(new_version[2]))
+    new_title = new_title.replace("{Maj}", str(new_version[0])).replace("{Min}", str(new_version[1])).replace("{Pre}", str(new_version[2]))
+    new_version_text = new_version_text.replace("{Maj}", str(new_version[0])).replace("{Min}", str(new_version[1])).replace("{Pre}", str(new_version[2]))
 
     if version_text_repo_file_path != None:
-        with open(version_text_repo_file_path, "w") as f:
-            f.write(new_version_text.replace("{Maj}", str(new_version[0])).replace("{Min}", str(new_version[1])).replace("{Pre}", str(new_version[2])))
-        command(f"git -C {ENVStorage.WORK_PATH}/checkout add {version_text_repo_file_path}")
-        command(f"git -C {ENVStorage.WORK_PATH}/checkout -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m '{version_text_commit_message}' --allow-empty-message --no-verify")  # NOTE
-        command(f"git -C {ENVStorage.WORK_PATH}/checkout push")
+        with open(version_text_repo_file_path, "r") as f:
+            old_version_text = f.read()
+        if old_version_text != new_version_text:
+            with open(version_text_repo_file_path, "w") as f:
+                f.write(new_version_text)
+            command(f"git -C {ENVStorage.WORK_PATH}/checkout add {version_text_repo_file_path}")
+            command(f"git -C {ENVStorage.WORK_PATH}/checkout -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m '{version_text_commit_message}' --allow-empty-message --no-verify")
+            command(f"git -C {ENVStorage.WORK_PATH}/checkout push")
 
     OutputStorage.tag = new_tag
     OutputStorage.title = new_title
