@@ -19,8 +19,8 @@ def print_to_err(x: str) -> None:
 
 def command(cmd: str) -> None:
     from os import system
-    if (e := system(cmd)) != 0:
-        exit(e)
+    if (system(cmd)) != 0:
+        exit(1)
 
 
 class InputError(ValueError):
