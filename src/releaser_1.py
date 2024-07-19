@@ -57,6 +57,8 @@ class Inputs(TypedDict):
     body_path: str
     body: str
     full_source_code_filename: str
+    version_text_repo_file_path: Optional[str]
+    version_text_format: str
 
 
 class ReleaseInformation(TypedDict):
@@ -78,6 +80,8 @@ class ENVStorage(GithubENVManager):
     INPUT_BODY_PATH: str
     INPUT_BODY: str
     INPUT_FULL_SOURCE_CODE_FILENAME: str
+    INPUT_VERSION_TEXT_REPO_FILE: str
+    INPUT_VERSION_TEXT_FORMAT: str
 
 
 class OutputStorage(GithubOutputManager):
@@ -121,6 +125,7 @@ def validate_inputs() -> Inputs:
     title_format = ENVStorage.INPUT_TITLE_FORMAT
     body_path = ENVStorage.INPUT_BODY_PATH
     body = ENVStorage.INPUT_BODY
+    version_text_format = ENVStorage.INPUT_VERSION_TEXT_FORMAT
 
     if ENVStorage.INPUT_REUSE_OLD_BODY == "true":
         body_mode = BODY_MODE.REUSE_OLD_BODY
@@ -142,7 +147,13 @@ def validate_inputs() -> Inputs:
     full_source_code_filename = sanitize_filename(ENVStorage.INPUT_FULL_SOURCE_CODE_FILENAME)
     full_source_code_filename = full_source_code_filename.removesuffix(".zip")
 
-    return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, title_format=title_format, ignore_drafts=ignore_drafts, body_mode=body_mode, body_path=body_path, body=body, full_source_code_filename=full_source_code_filename)
+    version_text_repo_file = sanitize_filename(ENVStorage.INPUT_VERSION_TEXT_REPO_FILE)
+    if version_text_repo_file != "":
+        version_text_repo_file_path = path.normpath(path.join(f"{work_path}/checkout/", path.relpath(version_text_repo_file, "/")))
+    else:
+        version_text_repo_file_path = None
+
+    return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, title_format=title_format, ignore_drafts=ignore_drafts, body_mode=body_mode, body_path=body_path, body=body, full_source_code_filename=full_source_code_filename, version_text_repo_file_path=version_text_repo_file_path, version_text_format=version_text_format)
 
 
 def parse_tag_format(tag_format: str) -> tuple[tuple[TAG_COMPONENTS, str], ...]:
@@ -275,7 +286,7 @@ def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None
             requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
 
 
-def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str, full_source_code_filename: str) -> str:
+def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str, full_source_code_filename: str, version_text_repo_file_path: Optional[str], version_text_format: TitleFormat) -> str:
     new_version = list(version)
     match(mode):
         case MODE.MAJOR:
@@ -310,11 +321,18 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
 
     if prerelease:
         new_title = title_format.title_with_pre_text
+        new_version_text = version_text_format.title_with_pre_text
     else:
         new_title = title_format.title_without_pre_text
+        new_version_text = version_text_format.title_without_pre_text
+
     new_title = new_title.replace("{Maj}", str(new_version[0]))
     new_title = new_title.replace("{Min}", str(new_version[1]))
     new_title = new_title.replace("{Pre}", str(new_version[2]))
+
+    if version_text_repo_file_path != None:
+        with open(version_text_repo_file_path, "w") as f:
+            f.write(new_version_text.replace("{Maj}", str(new_version[0])).replace("{Min}", str(new_version[1])).replace("{Pre}", str(new_version[2])))
 
     OutputStorage.tag = new_tag
     OutputStorage.title = new_title
@@ -339,6 +357,7 @@ def main() -> None:
     inputs = validate_inputs()
     tag_components = parse_tag_format(inputs["tag_format"])
     title_format = parse_title_format(inputs["title_format"])
+    version_text_format = parse_title_format(inputs["version_text_format"])
     last_release_information = get_last_release_information(inputs["repository"], inputs["github_token"], inputs["ignore_drafts"])
 
     try:
@@ -356,7 +375,7 @@ def main() -> None:
         body = inputs["body"]
         body_mode = inputs["body_mode"]
 
-    release_tag = generate_new_release_information(version, tag_components, title_format, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body, inputs["full_source_code_filename"])
+    release_tag = generate_new_release_information(version, tag_components, title_format, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body, inputs["full_source_code_filename"], inputs["version_text_repo_file_path"], version_text_format)
     delete_duplicates(inputs["repository"], release_tag, inputs["github_token"])
 
 

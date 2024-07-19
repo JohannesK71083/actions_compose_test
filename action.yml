@@ -32,10 +32,22 @@ inputs:
   full_source_code_filename: # str; without file extention; uses qmonnet/git-archive-all-action; feature disabled when string empty
     description: "The name of the source code"
     default: ""
+  version_text_repo_file: #str; path to the file inside a repo that contains the version text; feature disabled when string empty
+    description: "The path to the file containing the version text"
+    default: ""
+  version_text_format: #str; can include {Maj}, {Min}, {Pre} multiple times; the text enclosed by [] and including the {Pre} will only be used if it is a prerelease ( optional; excape with \\[ & \\] )
+    description: "The format of the version text"
+    default: "{Maj}.{Min}[_pre-{Pre}]"
 
 runs:
   using: "composite"
   steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      if: ${{ inputs.full_source_code_filename != '' || inputs.version_text_repo_file != ''}}
+      with:
+        path: "${{ github.workspace }}/checkout"
+
     - name: execute python script
       id: py_1
       shell: bash
@@ -55,12 +67,8 @@ runs:
         INPUT_BODY_PATH: ${{ inputs.body_path }}
         INPUT_BODY: ${{ inputs.body }}
         INPUT_FULL_SOURCE_CODE_FILENAME: ${{ inputs.full_source_code_filename }}
-
-    - name: Checkout
-      uses: actions/checkout@v4
-      if: ${{ steps.py_1.outputs.full_source_code_filename != '' }}
-      with:
-        path: "${{ github.workspace }}/checkout"
+        INPUT_VERSION_TEXT_REPO_FILE: ${{ inputs.version_text_repo_file }}
+        INPUT_VERSION_TEXT_FORMAT: ${{ inputs.version_text_format }}
 
     - name: Git-archive-all
       uses: qmonnet/git-archive-all-action@main
