@@ -37,6 +37,7 @@ runs:
   using: "composite"
   steps:
     - name: execute python script
+      id: py
       shell: bash
       run: |
         pip install --upgrade --upgrade-strategy eager -r "${{ github.action_path }}/requirements.txt"
@@ -57,15 +58,15 @@ runs:
 
     - name: Checkout
       uses: actions/checkout@v4
-      if: ${{ env.s_release_full_source_code_name != '' }}
+      if: ${{ steps.py.outputs.full_source_code_name != '' }}
       with:
         path: "${{ github.workspace }}/checkout"
 
     - name: Git-archive-all
       uses: JohannesK71083/git-archive-all-action@main
-      if: ${{ env.s_release_full_source_code_name != '' }}
+      if: ${{ steps.py.outputs.full_source_code_name != '' }}
       with:
-        output-files: "${{ github.workspace }}/${{ env.s_release_full_source_code_name }}.zip"
+        output-files: "${{ github.workspace }}/${{ steps.py.outputs.full_source_code_name }}.zip"
         base-repo: "${{ github.workspace }}/checkout"
         prefix: ""
 
@@ -81,13 +82,13 @@ runs:
       with:
         draft: ${{ true }}
         prerelease: ${{ inputs.prerelease }}
-        body_path: ${{ env.s_release_body_path }}
-        name: ${{ env.s_release_title }}
-        tag_name: ${{ env.s_release_tag }}
+        body_path: ${{ steps.py.outputs.body_path }}
+        name: ${{ steps.py.outputs.title }}
+        tag_name: ${{ steps.py.outputs.tag }}
         make_latest: ${{ true }}
-        files: ${{ env.s_release_files }}
+        files: ${{ steps.py.outputs.files }}
 
     - name: create log message
       shell: bash
       run: |
-        echo "::notice title=created release::created release '${{ env.s_release_tag }}' with the title '${{ env.s_release_title }}' and prerelease: '${{ inputs.prerelease }}'' at: ${{ steps.create_release.outputs.url }}"
+        echo "::notice title=created release::created release '${{ steps.py.outputs.tag }}' with the title '${{ steps.py.outputs.title }}' and prerelease: '${{ inputs.prerelease }}'' at: ${{ steps.create_release.outputs.url }}"

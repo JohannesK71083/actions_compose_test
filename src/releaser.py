@@ -8,7 +8,7 @@ from pathvalidate import sanitize_filename
 
 import requests
 
-from GithubENVManager import GithubENVManager
+from GithubStorageManager import GithubENVManager, GithubOutputManager
 
 TEMP_BODY_PATH: str = "./temp_body.txt"
 
@@ -75,11 +75,13 @@ class ENVStorage(GithubENVManager):
     INPUT_BODY: str
     INPUT_FULL_SOURCE_CODE_NAME: str
 
-    s_release_tag: str
-    s_release_title: str
-    s_release_body_path: str
-    s_release_files: str
-    s_release_full_source_code_name: str
+
+class OutputStorage(GithubOutputManager):
+    tag: str
+    title: str
+    body_path: str
+    files: str
+    full_source_code_name: str
 
 
 Version = NamedTuple("Version", [("major", int), ("minor", int), ("prerelease", int)])
@@ -310,21 +312,21 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
     new_title = new_title.replace("{Min}", str(new_version[1]))
     new_title = new_title.replace("{Pre}", str(new_version[2]))
 
-    ENVStorage.s_release_tag = new_tag
-    ENVStorage.s_release_title = new_title
+    OutputStorage.tag = new_tag
+    OutputStorage.title = new_title
 
     match body_mode:
         case BODY_MODE.BODY_FROM_FILE:
-            ENVStorage.s_release_body_path = body_path
+            OutputStorage.body_path = body_path
         case BODY_MODE.BODY_FROM_INPUT:
             with open(TEMP_BODY_PATH, "w") as f:
                 f.write(body)
-            ENVStorage.s_release_body_path = TEMP_BODY_PATH
+            OutputStorage.body_path = TEMP_BODY_PATH
         case _:
             raise ValueError
 
-    ENVStorage.s_release_full_source_code_name = full_source_code_name
-    ENVStorage.s_release_files = path.join(ENVStorage.WORK_PATH, full_source_code_name + ".zip")
+    OutputStorage.full_source_code_name = full_source_code_name
+    OutputStorage.files = path.join(ENVStorage.WORK_PATH, full_source_code_name + ".zip")
 
     return new_tag
 
