@@ -65,6 +65,7 @@ class Inputs(TypedDict):
     full_source_code_filename: str
     version_text_repo_file_path: Optional[str]
     version_text_format: str
+    version_text_commit_message: str
 
 
 class ReleaseInformation(TypedDict):
@@ -88,6 +89,7 @@ class ENVStorage(GithubENVManager):
     INPUT_FULL_SOURCE_CODE_FILENAME: str
     INPUT_VERSION_TEXT_REPO_FILE: str
     INPUT_VERSION_TEXT_FORMAT: str
+    INPUT_VERSION_TEXT_COMMIT_MESSAGE: str
 
 
 class OutputStorage(GithubOutputManager):
@@ -132,6 +134,7 @@ def validate_inputs() -> Inputs:
     body_path = ENVStorage.INPUT_BODY_PATH
     body = ENVStorage.INPUT_BODY
     version_text_format = ENVStorage.INPUT_VERSION_TEXT_FORMAT
+    version_text_commit_message = ENVStorage.INPUT_VERSION_TEXT_COMMIT_MESSAGE
 
     if ENVStorage.INPUT_REUSE_OLD_BODY == "true":
         body_mode = BODY_MODE.REUSE_OLD_BODY
@@ -159,7 +162,7 @@ def validate_inputs() -> Inputs:
     else:
         version_text_repo_file_path = None
 
-    return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, title_format=title_format, ignore_drafts=ignore_drafts, body_mode=body_mode, body_path=body_path, body=body, full_source_code_filename=full_source_code_filename, version_text_repo_file_path=version_text_repo_file_path, version_text_format=version_text_format)
+    return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, title_format=title_format, ignore_drafts=ignore_drafts, body_mode=body_mode, body_path=body_path, body=body, full_source_code_filename=full_source_code_filename, version_text_repo_file_path=version_text_repo_file_path, version_text_format=version_text_format, version_text_commit_message=version_text_commit_message)
 
 
 def parse_tag_format(tag_format: str) -> tuple[tuple[TAG_COMPONENTS, str], ...]:
@@ -292,7 +295,7 @@ def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None
             requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
 
 
-def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str, full_source_code_filename: str, version_text_repo_file_path: Optional[str], version_text_format: TitleFormat) -> str:
+def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str, full_source_code_filename: str, version_text_repo_file_path: Optional[str], version_text_format: TitleFormat, version_text_commit_message: str) -> str:
     new_version = list(version)
     match(mode):
         case MODE.MAJOR:
@@ -339,10 +342,8 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
     if version_text_repo_file_path != None:
         with open(version_text_repo_file_path, "w") as f:
             f.write(new_version_text.replace("{Maj}", str(new_version[0])).replace("{Min}", str(new_version[1])).replace("{Pre}", str(new_version[2])))
-        command("git config --global user.name 'github-actions[bot]'")
-        command("git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'")
         command(f"git -C {ENVStorage.WORK_PATH}/checkout add {version_text_repo_file_path}")
-        command(f"git -C {ENVStorage.WORK_PATH}/checkout commit -m 'Update version text file'")  # NOTE
+        command(f"git -C {ENVStorage.WORK_PATH}/checkout commit -m '{version_text_commit_message}' --allow-empty-message --no-verify --author='github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>'")  # NOTE
         command(f"git -C {ENVStorage.WORK_PATH}/checkout push")
 
     OutputStorage.tag = new_tag
@@ -386,7 +387,7 @@ def main() -> None:
         body = inputs["body"]
         body_mode = inputs["body_mode"]
 
-    release_tag = generate_new_release_information(version, tag_components, title_format, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body, inputs["full_source_code_filename"], inputs["version_text_repo_file_path"], version_text_format)
+    release_tag = generate_new_release_information(version, tag_components, title_format, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body, inputs["full_source_code_filename"], inputs["version_text_repo_file_path"], version_text_format, inputs["version_text_commit_message"])
     delete_duplicates(inputs["repository"], release_tag, inputs["github_token"])
 
 

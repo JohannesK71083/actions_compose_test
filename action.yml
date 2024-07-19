@@ -38,6 +38,9 @@ inputs:
   version_text_format: #str; can include {Maj}, {Min}, {Pre} multiple times; the text enclosed by [] and including the {Pre} will only be used if it is a prerelease ( optional; excape with \\[ & \\] )
     description: "The format of the version text"
     default: "{Maj}.{Min}[_pre-{Pre}]"
+  version_text_commit_message: #str; can include {VT} -> version_text
+    description: "The commit message for the version text"
+    default: "build: push version to {VT}"
 
 runs:
   using: "composite"
@@ -69,6 +72,7 @@ runs:
         INPUT_FULL_SOURCE_CODE_FILENAME: ${{ inputs.full_source_code_filename }}
         INPUT_VERSION_TEXT_REPO_FILE: ${{ inputs.version_text_repo_file }}
         INPUT_VERSION_TEXT_FORMAT: ${{ inputs.version_text_format }}
+        INPUT_VERSION_TEXT_COMMIT_MESSAGE: ${{ inputs.version_text_commit_message }}
 
     - name: Git-archive-all
       uses: qmonnet/git-archive-all-action@main
