@@ -13,8 +13,13 @@ from GithubStorageManager import GithubENVManager, GithubOutputManager
 TEMP_BODY_PATH: str = "./temp_body.txt"
 
 
-def print_to_err(x: str):
+def print_to_err(x: str) -> None:
     return print(x, file=stderr)
+
+
+def command(cmd: str) -> None:
+    if (e := system(cmd)) != 0:
+        exit(e)
 
 
 class InputError(ValueError):
@@ -333,9 +338,9 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
     if version_text_repo_file_path != None:
         with open(version_text_repo_file_path, "w") as f:
             f.write(new_version_text.replace("{Maj}", str(new_version[0])).replace("{Min}", str(new_version[1])).replace("{Pre}", str(new_version[2])))
-        print(system(f"git -C {ENVStorage.WORK_PATH}/checkout add {version_text_repo_file_path}"))
-        print(system(f"git -C {ENVStorage.WORK_PATH}/checkout commit -m 'Update version text file'"))  # NOTE
-        print(system(f"git -C {ENVStorage.WORK_PATH}/checkout push"))
+        system(f"git -C {ENVStorage.WORK_PATH}/checkout add {version_text_repo_file_path}")
+        system(f"git -C {ENVStorage.WORK_PATH}/checkout commit -m 'Update version text file'")  # NOTE
+        system(f"git -C {ENVStorage.WORK_PATH}/checkout push")
 
     OutputStorage.tag = new_tag
     OutputStorage.title = new_title
