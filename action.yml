@@ -1,7 +1,7 @@
 name: "Releaser"
 description: "Create a release"
 
-#TODO: desriptions; document outputs
+#TODO: desriptions; document outputs; input ignore commit
 
 inputs:
   # by conflicting inputs -> lowest priority wins
