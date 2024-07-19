@@ -337,6 +337,7 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
 
     new_title = new_title.replace("{Maj}", str(new_version[0])).replace("{Min}", str(new_version[1])).replace("{Pre}", str(new_version[2]))
     new_version_text = new_version_text.replace("{Maj}", str(new_version[0])).replace("{Min}", str(new_version[1])).replace("{Pre}", str(new_version[2]))
+    version_text_commit_message = version_text_commit_message.replace("{VT}", new_version_text)
 
     if version_text_repo_file_path != None:
         with open(version_text_repo_file_path, "r") as f:
