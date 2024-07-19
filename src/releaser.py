@@ -365,4 +365,4 @@ if __name__ == "__main__":
         ln = exc_tb.tb_lineno if exc_tb is not None else -1
         fname = path.split(exc_tb.tb_frame.f_code.co_filename)[1] if exc_tb is not None else ""
         print(f"::error title={{type(e).__name__}}::{type(e).__name__}: {str(e)}\n{exc}", file=stderr)
-        exit()
+        exit(1)
