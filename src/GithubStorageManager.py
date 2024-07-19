@@ -38,27 +38,27 @@ class GithubENVManager(metaclass=__GithubENVManagerMeta):
 
 
 class __GithubOutputManagerMeta(type):
-    outputs: dict[str, Any]
+    _outputs: dict[str, Any]
 
     def __new__(cls, name: str, bases: tuple[type, ...], dct: dict[str, str]) -> __GithubOutputManagerMeta:
         x = super().__new__(cls, name, bases, dct)
-        x.outputs = {}
+        x._outputs = {}
         return x
 
     def __getattribute__(self, name: str) -> Any:
-        if name.startswith("__") and name.endswith("__"):
+        if name.startswith("__") and name.endswith("__") or name == "_outputs":
             return super().__getattribute__(name)
 
         if name not in self.__annotations__.keys():
             raise AttributeError(f"invalid attribute {name}")
 
-        return self.outputs[name]
+        return self._outputs[name]
 
     def __setattr__(self, name: str, value: Any) -> None:
         if name not in self.__annotations__.keys():
             raise AttributeError(f"invalid attribute {name}")
 
-        self.outputs[name] = value
+        self._outputs[name] = value
 
         if type(value) == bool:
             st = "true" if value else "false"
