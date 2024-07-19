@@ -73,7 +73,7 @@ class ENVStorage(GithubENVManager):
     INPUT_REUSE_OLD_BODY: str
     INPUT_BODY_PATH: str
     INPUT_BODY: str
-    INPUT_FULL_SOURCE_CODE_FILE_NAME: str
+    INPUT_FULL_SOURCE_CODE_FILENAME: str
 
 
 class OutputStorage(GithubOutputManager):
@@ -135,7 +135,7 @@ def validate_inputs() -> Inputs:
     if tag_format.find("{Maj}") == -1 or tag_format.find("{Min}") == -1 or tag_format.find("{Pre}") == -1:
         raise InputError("INPUT_TAG_FORMAT", tag_format)
 
-    full_source_code_filename = sanitize_filename(ENVStorage.INPUT_FULL_SOURCE_CODE_FILE_NAME)
+    full_source_code_filename = sanitize_filename(ENVStorage.INPUT_FULL_SOURCE_CODE_FILENAME)
     full_source_code_filename = full_source_code_filename.removesuffix(".zip")
 
     return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, title_format=title_format, ignore_drafts=ignore_drafts, body_mode=body_mode, body_path=body_path, body=body, full_source_code_filename=full_source_code_filename)
