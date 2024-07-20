@@ -1,7 +1,7 @@
 name: "Releaser"
 description: "Create a release"
 
-#TODO: desriptions; document outputs; input ignore commit; input ignore commit if commit already exists
+#TODO: desriptions; document outputs; input ignore commit; input ignore commit if commit already exists; errors->warnings; better warning messages
 
 inputs:
   # by conflicting inputs -> lowest priority wins
