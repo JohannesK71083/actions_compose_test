@@ -392,7 +392,7 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
             request.urlretrieve(old_files[f], t_path)
             files.append(t_path)
         else:
-            print_to_err(f"::warning title=FILE_NOT_FOUND::File '{f}', which should be reused, could not be found in old releases files!")
+            print_to_err(f"::warning title=FILE_NOT_FOUND::The file '{f}', intended for reuse, was not found in the files from previous release!")
 
     if full_source_code_filename is not None:
         OutputStorage.full_source_code_filename = full_source_code_filename
