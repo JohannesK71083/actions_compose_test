@@ -52,11 +52,11 @@ runs:
         path: "${{ github.workspace }}/checkout"
 
     - name: execute python script
-      id: py_1
+      id: py
       shell: bash
       run: |
         pip install --upgrade --upgrade-strategy eager -r "${{ github.action_path }}/requirements.txt"
-        python -u "${{ github.action_path }}/src/releaser_1.py"
+        python -u "${{ github.action_path }}/src/releaser.py"
       env:
         GITHUB_TOKEN: ${{ github.token }}
         WORK_PATH: ${{ github.workspace }}
@@ -76,9 +76,9 @@ runs:
 
     - name: Git-archive-all
       uses: qmonnet/git-archive-all-action@main
-      if: ${{ steps.py_1.outputs.full_source_code_filename != '' }}
+      if: ${{ steps.py.outputs.full_source_code_filename != '' }}
       with:
-        output-files: "${{ github.workspace }}/${{ steps.py_1.outputs.full_source_code_filename }}.zip"
+        output-files: "${{ github.workspace }}/${{ steps.py.outputs.full_source_code_filename }}.zip"
         base-repo: "${{ github.workspace }}/checkout"
         prefix: "/"
 
@@ -94,13 +94,13 @@ runs:
       with:
         draft: ${{ true }}
         prerelease: ${{ inputs.prerelease }}
-        body_path: ${{ steps.py_1.outputs.body_path }}
-        name: ${{ steps.py_1.outputs.title }}
-        tag_name: ${{ steps.py_1.outputs.tag }}
+        body_path: ${{ steps.py.outputs.body_path }}
+        name: ${{ steps.py.outputs.title }}
+        tag_name: ${{ steps.py.outputs.tag }}
         make_latest: ${{ true }}
-        files: ${{ steps.py_1.outputs.files }}
+        files: ${{ steps.py.outputs.files }}
 
     - name: create log message
       shell: bash
       run: |
-        echo "::notice title=created release::created release '${{ steps.py_1.outputs.tag }}' with the title '${{ steps.py_1.outputs.title }}' and prerelease: '${{ inputs.prerelease }}' at: ${{ steps.create_release.outputs.url }}"
+        echo "::notice title=created release::created release '${{ steps.py.outputs.tag }}' with the title '${{ steps.py.outputs.title }}' and prerelease: '${{ inputs.prerelease }}' at: ${{ steps.create_release.outputs.url }}"
