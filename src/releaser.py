@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from os import path
+from os import mkdir, path
 import re
 from sys import exc_info, stderr
 from traceback import format_exc
@@ -383,6 +383,8 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
             raise ValueError
 
     files: list[str] = []
+
+    mkdir(path.join(ENVStorage.WORK_PATH, OLD_FILES_DIR))
 
     for f in reuse_old_files:
         if f in old_files:
