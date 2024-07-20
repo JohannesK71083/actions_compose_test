@@ -4,6 +4,7 @@ import re
 from sys import exc_info, stderr
 from traceback import format_exc
 from typing import Any, NamedTuple, Optional, TypedDict
+from urllib import request
 from pathvalidate import sanitize_filename, sanitize_filepath
 
 import requests
@@ -11,6 +12,7 @@ import requests
 from GithubStorageManager import GithubENVManager, GithubOutputManager
 
 TEMP_BODY_PATH: str = "./temp_body.txt"
+OLD_FILES_DIR: str = "./old_files"
 
 
 def print_to_err(x: str) -> None:
@@ -59,10 +61,11 @@ class Inputs(TypedDict):
     tag_format: str
     title_format: str
     ignore_drafts: bool
+    reuse_old_files: list[str]
     body_mode: BODY_MODE
     body_path: str
     body: str
-    full_source_code_filename: str
+    full_source_code_filename: Optional[str]
     commit_message: str
     version_text_repo_file_path: Optional[str]
     version_text_format: str
@@ -71,6 +74,7 @@ class Inputs(TypedDict):
 class ReleaseInformation(TypedDict):
     tag: str
     body: str
+    files: dict[str, str]
 
 
 class ENVStorage(GithubENVManager):
@@ -84,6 +88,7 @@ class ENVStorage(GithubENVManager):
     INPUT_TITLE_FORMAT: str
     IGNORE_DRAFTS: str
     INPUT_REUSE_OLD_BODY: str
+    INPUT_REUSE_OLD_FILES: str
     INPUT_BODY_PATH: str
     INPUT_BODY: str
     INPUT_FULL_SOURCE_CODE_FILENAME: str
@@ -97,7 +102,7 @@ class OutputStorage(GithubOutputManager):
     title: str
     body_path: str
     files: str
-    full_source_code_filename: str
+    full_source_code_filename: Optional[str]
 
 
 Version = NamedTuple("Version", [("major", int), ("minor", int), ("prerelease", int)])
@@ -158,6 +163,8 @@ def validate_inputs() -> Inputs:
 
     full_source_code_filename = sanitize_filename(ENVStorage.INPUT_FULL_SOURCE_CODE_FILENAME)
     full_source_code_filename = full_source_code_filename.removesuffix(".zip")
+    if full_source_code_filename == "":
+        full_source_code_filename = None
 
     version_text_repo_file = "/" + sanitize_filepath(ENVStorage.INPUT_VERSION_TEXT_REPO_FILE).lstrip("/")
     if version_text_repo_file != "":
@@ -165,7 +172,11 @@ def validate_inputs() -> Inputs:
     else:
         version_text_repo_file_path = None
 
-    return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, title_format=title_format, ignore_drafts=ignore_drafts, body_mode=body_mode, body_path=body_path, body=body, full_source_code_filename=full_source_code_filename, commit_message=commit_message, version_text_repo_file_path=version_text_repo_file_path, version_text_format=version_text_format)
+    reuse_old_files: list[str] = []
+    for f in ENVStorage.INPUT_REUSE_OLD_FILES.split("\n"):
+        reuse_old_files.append(sanitize_filename(f))
+
+    return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, title_format=title_format, ignore_drafts=ignore_drafts, reuse_old_files=reuse_old_files, body_mode=body_mode, body_path=body_path, body=body, full_source_code_filename=full_source_code_filename, commit_message=commit_message, version_text_repo_file_path=version_text_repo_file_path, version_text_format=version_text_format)
 
 
 def parse_tag_format(tag_format: str) -> tuple[tuple[TAG_COMPONENTS, str], ...]:
@@ -234,12 +245,16 @@ def get_last_release_information(repository_name: str, github_token: str, ignore
     r = requests.get(f'https://api.github.com/repos/{repository_name}/releases?per_page=100', headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
     for js in r.json():
         if not (js["draft"] and ignore_drafts):
+            files: dict[str, str] = {}
+            for a in js["assets"]:  # NOTE
+                files[a["name"]] = a["browser_download_url"]
             break
     else:
         print_to_err("::warning title=no releases found::no existing " + ("(non-draft) " if ignore_drafts else "") + "releases found!")
+        files: dict[str, str] = {}
         js = {"tag_name": "", "body": ""}
 
-    return ReleaseInformation(tag=js["tag_name"], body=js["body"])
+    return ReleaseInformation(tag=js["tag_name"], body=js["body"], files=files)
 
 
 def get_old_version(tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], old_tag: str) -> Version:
@@ -298,7 +313,7 @@ def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None
             requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
 
 
-def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, body_mode: BODY_MODE, body_path: str, body: str, full_source_code_filename: str, version_text_repo_file_path: Optional[str], version_text_format: TitleFormat, commit_message: str) -> str:
+def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, old_files: dict[str, str], reuse_old_files: list[str], body_mode: BODY_MODE, body_path: str, body: str, full_source_code_filename: Optional[str], version_text_repo_file_path: Optional[str], version_text_format: TitleFormat, commit_message: str) -> str:
     new_version = list(version)
     match(mode):
         case MODE.MAJOR:
@@ -367,8 +382,21 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
         case _:
             raise ValueError
 
-    OutputStorage.full_source_code_filename = full_source_code_filename
-    OutputStorage.files = path.join(ENVStorage.WORK_PATH, full_source_code_filename + ".zip")
+    files: list[str] = []
+
+    for f in reuse_old_files:
+        if f in old_files:
+            t_path = path.normpath(path.join(ENVStorage.WORK_PATH, OLD_FILES_DIR, f))
+            request.urlretrieve(old_files[f], t_path)
+            files.append(t_path)
+        else:
+            print_to_err(f"::warning title=FILE_NOT_FOUND::File '{f}', which should be reused, could not be found in old releases files!")
+
+    if full_source_code_filename is not None:
+        OutputStorage.full_source_code_filename = full_source_code_filename
+        files.append(path.join(ENVStorage.WORK_PATH, full_source_code_filename + ".zip"))
+
+    OutputStorage.files = "\n".join(files)
 
     return new_tag
 
@@ -395,7 +423,7 @@ def main() -> None:
         body = inputs["body"]
         body_mode = inputs["body_mode"]
 
-    release_tag = generate_new_release_information(version, tag_components, title_format, inputs["mode"], inputs["prerelease"], body_mode, inputs["body_path"], body, inputs["full_source_code_filename"], inputs["version_text_repo_file_path"], version_text_format, inputs["commit_message"])
+    release_tag = generate_new_release_information(version, tag_components, title_format, inputs["mode"], inputs["prerelease"], last_release_information["files"], inputs["reuse_old_files"], body_mode, inputs["body_path"], body, inputs["full_source_code_filename"], inputs["version_text_repo_file_path"], version_text_format, inputs["commit_message"])
     delete_duplicates(inputs["repository"], release_tag, inputs["github_token"])
 
 

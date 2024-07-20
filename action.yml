@@ -20,6 +20,9 @@ inputs:
   ignore_drafts: # true/false
     description: "Whether to ignore drafts while searching for the latest release"
     default: "true"
+  reuse_old_files: # str; list of files to reuse from the old release; feature disabled when string empty; files seperated by \n
+    description: "The files to reuse from the old release"
+    default: ""
   reuse_old_body: # true/false; priority: 0
     description: "Whether to reuse the old release body"
     default: "true"
@@ -66,6 +69,7 @@ runs:
         INPUT_TAG_FORMAT: ${{ inputs.tag_format }}
         INPUT_TITLE_FORMAT: ${{ inputs.title_format }}
         IGNORE_DRAFTS: ${{ inputs.ignore_drafts }}
+        INPUT_REUSE_OLD_FILES: ${{ inputs.reuse_old_files }}
         INPUT_REUSE_OLD_BODY: ${{ inputs.reuse_old_body }}
         INPUT_BODY_PATH: ${{ inputs.body_path }}
         INPUT_BODY: ${{ inputs.body }}
