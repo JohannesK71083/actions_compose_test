@@ -179,11 +179,11 @@ def validate_inputs() -> Inputs:
         version_text_repo_file_path = None
 
     reuse_old_files: list[str] = []
-    reuse_old_files = ENVStorage.INPUT_REUSE_OLD_FILES.split("\n")
+    reuse_old_files = ENVStorage.INPUT_REUSE_OLD_FILES.split("\n")  # TODO: resilience gegen abs. path
 
     if ENVStorage.INPUT_VSDX_FILES != "":
-        vsdx_files = ENVStorage.INPUT_VSDX_FILES.split("\n")
-        vsdx_output_filenames = ENVStorage.INPUT_VSDX_OUTPUT_FILENAMES.split("\n")
+        vsdx_files = ENVStorage.INPUT_VSDX_FILES.split("\n")  # TODO: resilience gegen abs. path
+        vsdx_output_filenames = ENVStorage.INPUT_VSDX_OUTPUT_FILENAMES.split("\n")  # TODO: resilience gegen abs. path
         if len(vsdx_files) != len(vsdx_output_filenames):
             raise ValueError("number of vsdx files and output filenames must be the same.")
     else:
@@ -329,7 +329,7 @@ def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None
             requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
 
 
-def convert_vsdx_to_pdf(vsdx_path: str, pdf_name: str) -> str:
+def convert_vsdx_to_pdf(vsdx_path: str, pdf_path: str) -> str:
     jpype.startJVM()  # type:ignore
     # fmt: off
     from asposediagram.api import Diagram, SaveFileFormat # type:ignore
@@ -350,11 +350,10 @@ def convert_vsdx_to_pdf(vsdx_path: str, pdf_name: str) -> str:
         page.apply_redactions()  # type:ignore
         page.apply_redactions(images=fitz.PDF_REDACT_IMAGE_NONE)  # type:ignore
     # then save the doc to a new PDF:
-    output_filename = pdf_name + ".pdf"
-    doc.save(output_filename, garbage=3, deflate=True)  # type:ignore
+    doc.save(pdf_path, garbage=3, deflate=True)  # type:ignore
     doc.close()
     remove("tmp.pdf")
-    return output_filename
+    return pdf_path
 
 
 def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, old_files: dict[str, str], reuse_old_files: tuple[str, ...], body_mode: BODY_MODE, body_path: str, body: str, full_source_code_filename: Optional[str], version_text_repo_file_path: Optional[str], version_text_format: TitleFormat, commit_message: str, vsdx_files: tuple[str, ...], vsdx_output_filenames: tuple[str, ...]) -> str:
@@ -443,7 +442,7 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
         files.append(path.join(ENVStorage.WORK_PATH, full_source_code_filename + ".zip"))
 
     for vsdx_file, output_filename in zip(vsdx_files, vsdx_output_filenames):
-        files.append(convert_vsdx_to_pdf(vsdx_file, output_filename))
+        files.append(convert_vsdx_to_pdf(path.join(f"{ENVStorage.WORK_PATH}/checkout", vsdx_file), path.join(ENVStorage.WORK_PATH, output_filename)))
 
     OutputStorage.files = "\n".join(files)
 
