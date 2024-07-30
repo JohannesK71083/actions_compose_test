@@ -184,7 +184,7 @@ def validate_inputs() -> Inputs:
     if ENVStorage.INPUT_VSDX_FILES != "":
         vsdx_files = ENVStorage.INPUT_VSDX_FILES.split("\n")  # TODO: resilience gegen abs. path
         vsdx_output_filenames = ENVStorage.INPUT_VSDX_OUTPUT_FILENAMES.split("\n")  # TODO: resilience gegen abs. path
-        if vsdx_output_filenames == "" or len(vsdx_files) != len(vsdx_output_filenames):
+        if ENVStorage.INPUT_VSDX_OUTPUT_FILENAMES == "" or len(vsdx_files) != len(vsdx_output_filenames):
             raise ValueError("number of vsdx files and output filenames must be the same.")
     else:
         vsdx_files = []
