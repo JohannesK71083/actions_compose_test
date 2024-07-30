@@ -1,4 +1,4 @@
 pathvalidate
-JPipe1
+JPype1
 aspose-diagram
 PyMuPDF
