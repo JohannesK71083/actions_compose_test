@@ -1,1 +1,4 @@
 pathvalidate
+JPipe1
+aspose-diagram
+PyMuPDF

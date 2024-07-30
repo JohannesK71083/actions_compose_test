@@ -44,6 +44,12 @@ inputs:
   version_text_repo_file: #str; path to the file inside a repo that contains the version text; feature disabled when string empty
     description: "The path to the file containing the version text"
     default: ""
+  vsdx_files: #str; list of visio files to convert to pdf; files seperated by \n; feature disabled when string empty
+    description: "The visio files to convert to pdf"
+    default: ""
+  vsdx_output_filenames: #str; names of converted vsdx files; files seperated by \n; same order as vsdx_files
+    description: "The names of the converted visio files"
+    default: ""
 
 runs:
   using: "composite"
@@ -77,6 +83,8 @@ runs:
         INPUT_COMMIT_MESSAGE: ${{ inputs.commit_message }}
         INPUT_VERSION_TEXT_REPO_FILE: ${{ inputs.version_text_repo_file }}
         INPUT_VERSION_TEXT_FORMAT: ${{ inputs.version_text_format }}
+        INPUT_VSDX_FILES: ${{ inputs.vsdx_files }}
+        INPUT_VSDX_OUTPUT_FILENAMES: ${{ inputs.vsdx_output_filenames }}
 
     - name: Git-archive-all
       uses: qmonnet/git-archive-all-action@main

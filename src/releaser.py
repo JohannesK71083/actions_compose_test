@@ -1,5 +1,7 @@
+import jpype  # type:ignore
+import fitz  # type:ignore
 from enum import Enum, auto
-from os import mkdir, path
+from os import mkdir, path, remove
 import re
 from sys import exc_info, stderr
 from traceback import format_exc
@@ -61,7 +63,7 @@ class Inputs(TypedDict):
     tag_format: str
     title_format: str
     ignore_drafts: bool
-    reuse_old_files: list[str]
+    reuse_old_files: tuple[str, ...]
     body_mode: BODY_MODE
     body_path: str
     body: str
@@ -69,6 +71,8 @@ class Inputs(TypedDict):
     commit_message: str
     version_text_repo_file_path: Optional[str]
     version_text_format: str
+    vsdx_files: tuple[str, ...]
+    vsdx_output_filenames: tuple[str, ...]
 
 
 class ReleaseInformation(TypedDict):
@@ -95,6 +99,8 @@ class ENVStorage(GithubENVManager):
     INPUT_COMMIT_MESSAGE: str
     INPUT_VERSION_TEXT_REPO_FILE: str
     INPUT_VERSION_TEXT_FORMAT: str
+    INPUT_VSDX_FILES: str
+    INPUT_VSDX_OUTPUT_FILENAMES: str
 
 
 class OutputStorage(GithubOutputManager):
@@ -173,10 +179,20 @@ def validate_inputs() -> Inputs:
         version_text_repo_file_path = None
 
     reuse_old_files: list[str] = []
-    for f in ENVStorage.INPUT_REUSE_OLD_FILES.split("\n"):
-        reuse_old_files.append(sanitize_filename(f))
+    reuse_old_files = ENVStorage.INPUT_REUSE_OLD_FILES.split("\n")
 
-    return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, title_format=title_format, ignore_drafts=ignore_drafts, reuse_old_files=reuse_old_files, body_mode=body_mode, body_path=body_path, body=body, full_source_code_filename=full_source_code_filename, commit_message=commit_message, version_text_repo_file_path=version_text_repo_file_path, version_text_format=version_text_format)
+    if ENVStorage.INPUT_VSDX_FILES != "":
+        vsdx_files = ENVStorage.INPUT_VSDX_FILES.split("\n")
+        vsdx_output_filenames = ENVStorage.INPUT_VSDX_OUTPUT_FILENAMES.split("\n")
+        if len(vsdx_files) != len(vsdx_output_filenames):
+            raise ValueError("number of vsdx files and output filenames must be the same.")
+    else:
+        vsdx_files = []
+        vsdx_output_filenames = []
+        if ENVStorage.INPUT_VSDX_OUTPUT_FILENAMES != "":
+            print_to_err("::warning title=NO_VSDX_FILES::No vsdx files were provided, but output filenames were provided.")
+
+    return Inputs(github_token=github_token, work_path=work_path, repository=repository, mode=mode, prerelease=prerelease, tag_format=tag_format, title_format=title_format, ignore_drafts=ignore_drafts, reuse_old_files=tuple(reuse_old_files), body_mode=body_mode, body_path=body_path, body=body, full_source_code_filename=full_source_code_filename, commit_message=commit_message, version_text_repo_file_path=version_text_repo_file_path, version_text_format=version_text_format, vsdx_files=tuple(vsdx_files), vsdx_output_filenames=tuple(vsdx_output_filenames))
 
 
 def parse_tag_format(tag_format: str) -> tuple[tuple[TAG_COMPONENTS, str], ...]:
@@ -313,7 +329,35 @@ def delete_duplicates(repository_name: str, tag: str, github_token: str) -> None
             requests.delete(f"https://api.github.com/repos/{repository_name}/releases/{js['id']}", headers={'Accept': 'application/vnd.github+json', 'Authorization': f"Bearer {github_token}"})
 
 
-def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, old_files: dict[str, str], reuse_old_files: list[str], body_mode: BODY_MODE, body_path: str, body: str, full_source_code_filename: Optional[str], version_text_repo_file_path: Optional[str], version_text_format: TitleFormat, commit_message: str) -> str:
+def convert_vsdx_to_pdf(vsdx_path: str, pdf_name: str) -> str:
+    jpype.startJVM()  # type:ignore
+    # fmt: off
+    from asposediagram.api import Diagram, SaveFileFormat # type:ignore
+    # fmt: on
+
+    diagram = Diagram(vsdx_path)  # type:ignore
+    diagram.save("tmp.pdf", SaveFileFormat.PDF)  # type:ignore
+
+    doc = fitz.open("tmp.pdf")
+
+    page = doc.load_page(0)  # type:ignore
+
+    draft = page.search_for(  # type:ignore
+        "Created with Evaluation version of Aspose.Diagram (c).")
+
+    for rect in draft:  # type:ignore
+        annot = page.add_redact_annot(rect)  # type:ignore
+        page.apply_redactions()  # type:ignore
+        page.apply_redactions(images=fitz.PDF_REDACT_IMAGE_NONE)  # type:ignore
+    # then save the doc to a new PDF:
+    output_filename = pdf_name + ".pdf"
+    doc.save(output_filename, garbage=3, deflate=True)  # type:ignore
+    doc.close()
+    remove("tmp.pdf")
+    return output_filename
+
+
+def generate_new_release_information(version: Version, tag_components: tuple[tuple[TAG_COMPONENTS, str], ...], title_format: TitleFormat, mode: MODE, prerelease: bool, old_files: dict[str, str], reuse_old_files: tuple[str, ...], body_mode: BODY_MODE, body_path: str, body: str, full_source_code_filename: Optional[str], version_text_repo_file_path: Optional[str], version_text_format: TitleFormat, commit_message: str, vsdx_files: tuple[str, ...], vsdx_output_filenames: tuple[str, ...]) -> str:
     new_version = list(version)
     match(mode):
         case MODE.MAJOR:
@@ -398,6 +442,9 @@ def generate_new_release_information(version: Version, tag_components: tuple[tup
         OutputStorage.full_source_code_filename = full_source_code_filename
         files.append(path.join(ENVStorage.WORK_PATH, full_source_code_filename + ".zip"))
 
+    for vsdx_file, output_filename in zip(vsdx_files, vsdx_output_filenames):
+        files.append(convert_vsdx_to_pdf(vsdx_file, output_filename))
+
     OutputStorage.files = "\n".join(files)
 
     return new_tag
@@ -425,7 +472,7 @@ def main() -> None:
         body = inputs["body"]
         body_mode = inputs["body_mode"]
 
-    release_tag = generate_new_release_information(version, tag_components, title_format, inputs["mode"], inputs["prerelease"], last_release_information["files"], inputs["reuse_old_files"], body_mode, inputs["body_path"], body, inputs["full_source_code_filename"], inputs["version_text_repo_file_path"], version_text_format, inputs["commit_message"])
+    release_tag = generate_new_release_information(version, tag_components, title_format, inputs["mode"], inputs["prerelease"], last_release_information["files"], inputs["reuse_old_files"], body_mode, inputs["body_path"], body, inputs["full_source_code_filename"], inputs["version_text_repo_file_path"], version_text_format, inputs["commit_message"], inputs["vsdx_files"], inputs["vsdx_output_filenames"])
     delete_duplicates(inputs["repository"], release_tag, inputs["github_token"])
 
 
