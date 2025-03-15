@@ -478,7 +478,7 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
+    except BaseException as e:
         exc = format_exc()
         exc_type, exc_obj, exc_tb = exc_info()
         ln = exc_tb.tb_lineno if exc_tb is not None else -1
