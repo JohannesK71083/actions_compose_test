@@ -1,10 +1,10 @@
-:: V1.1
+:: V1.2
 
 @echo off
 
 setlocal EnableDelayedExpansion
 
-call _start_CMD.cmd NO_CMD
+call _start_CMD.cmd NO_CMD %~1
 
 set DEV=1
 
